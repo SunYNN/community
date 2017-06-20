@@ -1,17 +1,146 @@
-<!DOCTYPE html>
-<html lang="en">
+.fl{
+	float: left;
+}
+.fr{
+	float: right;
+}
+.wrap{
+	width: 16rem;
+    margin: 0 auto;
+}
+.header{
+	border: none;
+	padding: .5rem;
+    height: 2.15rem;
+}
+.community-title{
+	width: 1.5rem;
+	height: 1rem;
+	border-radius: .095rem;
+	background: #00a0e9;
+	text-align: center;
+	margin-left: .25rem;
+}
+.community-title-h1{
+	display: inline-block;
+	font-size: .55rem;
+	color: #fff;
+	line-height: 1rem;
+}
+.quickselect-more{
+    width: .9rem;
+    height: .9rem;
+    line-height: .9rem;
+    text-align: center;
+}
+.quickselect-more-icon{
+	background: url(http://i1.dd-img.com/assets/image/1497929985-a62280586762cc3e-28w-16h.png) no-repeat center;
+	width: .7rem;
+    height: .4rem;
+    display: inline-block;
+    background-size: 100% 100%;
+}
+.slider{
+	border-left: 1px solid #eee;
+	font-size: .75rem;
+	margin-left: .6rem;
+	width: 8.3rem;
+	height: 1rem;
+	overflow: hidden;
+}
 
-<head>
-    <meta charset="UTF-8">
-    <title>Document</title>
-</head>
+.slider-nav-list {
+   display: inline-block;
+    color: #b3b9ba;
+    padding: 0 .55rem;
+}
+.slider-nav-active{
+	color: #5c6b6e;
+}
+.slider-up{
+	background: #f2f2f2;
+	position: fixed;
+    width: 100%;
+    height: 100%;
+    left: 0;
+    top: 0;
+    z-index: 100;
+   display: none;
+}
+.slider-up-header{
+	height:2.15rem;
+	background: #fff;
+	line-height: 2.15rem;
+	text-align: center;
+	position: relative;
+}
+.slider-header-icon{
+	width: 1rem;
+    height: 1.15rem;
+    margin-left: .6rem;
+    position: absolute;
+    top: .5rem;
+    line-height: 1.15rem;
+    text-align: center;
+}
+.slider-search{
+	height: 1.125rem;
+	margin: .6rem;
+	border: 1px solid #dcdcdc;
+	border-radius: .2rem;
+	background: #fff;
+}
+.slider-search-icon{
+    width: 1rem;
+    height: 1.125rem;
+    line-height: 1rem;
+    margin: 0 .22rem;
+    text-align: center;
+}
+.slider-search-icon .icon{
+	font-size: .6rem;
+	color: #a1a1a1;
 
-<body>
-
-    <header class="header">点击这里</header>
-
-    <script src="Header.js"></script>
-
-</body>
-
-</html>
+}
+.slider-search-input{
+	position: relative;
+    width: 12rem;
+    height: 1.125rem;
+    line-height: 1.125rem;
+    padding-left: .3rem;
+    top: 0;
+    left: 0;
+    background-color: transparent;
+    border-width: 0;
+	font-size: .55rem;
+	color: #aeaeae;
+}
+.slider-models{
+	padding: 0 .6rem;
+}
+.slider-models-car{
+	clear: both;
+}
+.slider-models-list{
+	width: 7.25rem;
+	height: 3.75rem;
+	line-height: 3.75rem;
+	font-size: .75rem;
+	color: #000;
+	margin-bottom: .25rem;
+	border-radius: .2rem;
+	text-align: center;
+	background: #cfd8dd;
+	float: left;
+	margin-right: .25rem;
+}
+.slider-models-list:nth-child(2n){
+	margin-right: 0;
+}
+.slider-models-list:nth-child(2),
+.slider-models-list:nth-child(3),
+.slider-models-list:nth-child(6),
+.slider-models-list:nth-child(7),
+.slider-models-list:nth-child(10){
+	background: #dfe1e3;
+}

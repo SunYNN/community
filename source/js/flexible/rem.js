@@ -28,11 +28,9 @@
         e.persisted && (clearTimeout(renderTime), renderTime = setTimeout(initPage, 300));
     }, false);
 
-    "complete" === document.readyState
-        ? document.body.style.fontSize = 12 * ratio + "px"
-        : document.addEventListener("DOMContentLoaded", function() {
-            document.body.style.fontSize = 12 * ratio + "px";
-        }, false);
+    "complete" === document.readyState ? document.body.style.fontSize = 12 * ratio + "px" : document.addEventListener("DOMContentLoaded", function() {
+        document.body.style.fontSize = 12 * ratio + "px";
+    }, false);
 
     initPage();
 

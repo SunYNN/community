@@ -4,11 +4,11 @@ var path = require('path');
 module.exports = {
 
     entry: {
-        app: path.resolve(__dirname, 'source/app.js')
+        index: path.resolve(__dirname, 'source/app')
     },
 
     output: {
-        path: path.resolve(__dirname, 'build'),
+        path: path.resolve(__dirname, 'build/index'),
         filename: '[name].debug.js'
     },
 
@@ -19,5 +19,10 @@ module.exports = {
                 use: ['style-loader', 'css-loader']
             }
         ]
+    },
+      resolve: {
+        alias: {
+            swiper: path.resolve(__dirname, 'source/lib/swiper/idangerous.swiper.min'),
+        }
     }
 };

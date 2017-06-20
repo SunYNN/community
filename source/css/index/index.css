@@ -1,0 +1,42 @@
+img {
+    vertical-align: middle;
+}
+.focus,.focus-swiper-container{
+	position: relative;
+    height: 8.5rem;
+    background-color: #fff;
+}
+.focus-swiper-container{
+	overflow: hidden;
+}
+.focus-swiper-wrapper{
+	position: relative;
+
+}
+.focus-swiper-slide{
+	float: left;
+}
+.focus img {
+    width: 16rem;
+    height: 8.5rem;
+}
+.focus-pages {
+    position: absolute;
+    left: 0;
+    bottom: .5rem;
+    width: 100%;
+    height: 1.1rem;
+    padding: .4rem 0;
+    text-align: center;
+}
+.focus-pages span {
+    display: inline-block;
+    width: .2rem;
+    height: .2rem;
+    background-color: #888;
+    margin: 0 .25rem;
+}
+.focus-pages span.swiper-active-switch {
+    background-color: #00a0e9;
+    box-shadow: 0 0 0 2px #8f8f98;
+}
