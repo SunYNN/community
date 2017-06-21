@@ -21,6 +21,7 @@ define(function(require, exports, module) {
             var that = this;
 
             $('.quickselect-more').on('click', function() {
+
                 $('.slider-up').show();
 
             });

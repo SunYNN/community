@@ -28,17 +28,10 @@
 	line-height: 1rem;
 }
 .quickselect-more{
-    width: .9rem;
-    height: .9rem;
-    line-height: .9rem;
+      width: 1rem;
+    height: 1.15rem;
+    line-height: 1.15rem;
     text-align: center;
-}
-.quickselect-more-icon{
-	background: url(http://i1.dd-img.com/assets/image/1497929985-a62280586762cc3e-28w-16h.png) no-repeat center;
-	width: .7rem;
-    height: .4rem;
-    display: inline-block;
-    background-size: 100% 100%;
 }
 .slider{
 	border-left: 1px solid #eee;

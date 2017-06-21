@@ -1,8 +1,7 @@
 define(function(require, exports, module) {
 
     var $ = require('jquery');
-    require('../../css/base_v3.min.css');
-    require('../../js/flexible/rem.min.js');
+
     var Swiper = require('swiper');
 
     var Box = function() {

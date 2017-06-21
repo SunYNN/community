@@ -60,452 +60,11 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 6);
+/******/ 	return __webpack_require__(__webpack_require__.s = 4);
 /******/ })
 /************************************************************************/
 /******/ ([
 /* 0 */
-/***/ (function(module, exports) {
-
-/*
-	MIT License http://www.opensource.org/licenses/mit-license.php
-	Author Tobias Koppers @sokra
-*/
-// css base code, injected by the css-loader
-module.exports = function(useSourceMap) {
-	var list = [];
-
-	// return the list of modules as css string
-	list.toString = function toString() {
-		return this.map(function (item) {
-			var content = cssWithMappingToString(item, useSourceMap);
-			if(item[2]) {
-				return "@media " + item[2] + "{" + content + "}";
-			} else {
-				return content;
-			}
-		}).join("");
-	};
-
-	// import a list of modules into the list
-	list.i = function(modules, mediaQuery) {
-		if(typeof modules === "string")
-			modules = [[null, modules, ""]];
-		var alreadyImportedModules = {};
-		for(var i = 0; i < this.length; i++) {
-			var id = this[i][0];
-			if(typeof id === "number")
-				alreadyImportedModules[id] = true;
-		}
-		for(i = 0; i < modules.length; i++) {
-			var item = modules[i];
-			// skip already imported module
-			// this implementation is not 100% perfect for weird media query combinations
-			//  when a module is imported multiple times with different media queries.
-			//  I hope this will never occur (Hey this way we have smaller bundles)
-			if(typeof item[0] !== "number" || !alreadyImportedModules[item[0]]) {
-				if(mediaQuery && !item[2]) {
-					item[2] = mediaQuery;
-				} else if(mediaQuery) {
-					item[2] = "(" + item[2] + ") and (" + mediaQuery + ")";
-				}
-				list.push(item);
-			}
-		}
-	};
-	return list;
-};
-
-function cssWithMappingToString(item, useSourceMap) {
-	var content = item[1] || '';
-	var cssMapping = item[3];
-	if (!cssMapping) {
-		return content;
-	}
-
-	if (useSourceMap && typeof btoa === 'function') {
-		var sourceMapping = toComment(cssMapping);
-		var sourceURLs = cssMapping.sources.map(function (source) {
-			return '/*# sourceURL=' + cssMapping.sourceRoot + source + ' */'
-		});
-
-		return [content].concat(sourceURLs).concat([sourceMapping]).join('\n');
-	}
-
-	return [content].join('\n');
-}
-
-// Adapted from convert-source-map (MIT)
-function toComment(sourceMap) {
-	// eslint-disable-next-line no-undef
-	var base64 = btoa(unescape(encodeURIComponent(JSON.stringify(sourceMap))));
-	var data = 'sourceMappingURL=data:application/json;charset=utf-8;base64,' + base64;
-
-	return '/*# ' + data + ' */';
-}
-
-
-/***/ }),
-/* 1 */
-/***/ (function(module, exports, __webpack_require__) {
-
-/*
-	MIT License http://www.opensource.org/licenses/mit-license.php
-	Author Tobias Koppers @sokra
-*/
-
-var stylesInDom = {};
-
-var	memoize = function (fn) {
-	var memo;
-
-	return function () {
-		if (typeof memo === "undefined") memo = fn.apply(this, arguments);
-		return memo;
-	};
-};
-
-var isOldIE = memoize(function () {
-	// Test for IE <= 9 as proposed by Browserhacks
-	// @see http://browserhacks.com/#hack-e71d8692f65334173fee715c222cb805
-	// Tests for existence of standard globals is to allow style-loader
-	// to operate correctly into non-standard environments
-	// @see https://github.com/webpack-contrib/style-loader/issues/177
-	return window && document && document.all && !window.atob;
-});
-
-var getElement = (function (fn) {
-	var memo = {};
-
-	return function(selector) {
-		if (typeof memo[selector] === "undefined") {
-			memo[selector] = fn.call(this, selector);
-		}
-
-		return memo[selector]
-	};
-})(function (target) {
-	return document.querySelector(target)
-});
-
-var singleton = null;
-var	singletonCounter = 0;
-var	stylesInsertedAtTop = [];
-
-var	fixUrls = __webpack_require__(9);
-
-module.exports = function(list, options) {
-	if (typeof DEBUG !== "undefined" && DEBUG) {
-		if (typeof document !== "object") throw new Error("The style-loader cannot be used in a non-browser environment");
-	}
-
-	options = options || {};
-
-	options.attrs = typeof options.attrs === "object" ? options.attrs : {};
-
-	// Force single-tag solution on IE6-9, which has a hard limit on the # of <style>
-	// tags it will allow on a page
-	if (!options.singleton) options.singleton = isOldIE();
-
-	// By default, add <style> tags to the <head> element
-	if (!options.insertInto) options.insertInto = "head";
-
-	// By default, add <style> tags to the bottom of the target
-	if (!options.insertAt) options.insertAt = "bottom";
-
-	var styles = listToStyles(list, options);
-
-	addStylesToDom(styles, options);
-
-	return function update (newList) {
-		var mayRemove = [];
-
-		for (var i = 0; i < styles.length; i++) {
-			var item = styles[i];
-			var domStyle = stylesInDom[item.id];
-
-			domStyle.refs--;
-			mayRemove.push(domStyle);
-		}
-
-		if(newList) {
-			var newStyles = listToStyles(newList, options);
-			addStylesToDom(newStyles, options);
-		}
-
-		for (var i = 0; i < mayRemove.length; i++) {
-			var domStyle = mayRemove[i];
-
-			if(domStyle.refs === 0) {
-				for (var j = 0; j < domStyle.parts.length; j++) domStyle.parts[j]();
-
-				delete stylesInDom[domStyle.id];
-			}
-		}
-	};
-};
-
-function addStylesToDom (styles, options) {
-	for (var i = 0; i < styles.length; i++) {
-		var item = styles[i];
-		var domStyle = stylesInDom[item.id];
-
-		if(domStyle) {
-			domStyle.refs++;
-
-			for(var j = 0; j < domStyle.parts.length; j++) {
-				domStyle.parts[j](item.parts[j]);
-			}
-
-			for(; j < item.parts.length; j++) {
-				domStyle.parts.push(addStyle(item.parts[j], options));
-			}
-		} else {
-			var parts = [];
-
-			for(var j = 0; j < item.parts.length; j++) {
-				parts.push(addStyle(item.parts[j], options));
-			}
-
-			stylesInDom[item.id] = {id: item.id, refs: 1, parts: parts};
-		}
-	}
-}
-
-function listToStyles (list, options) {
-	var styles = [];
-	var newStyles = {};
-
-	for (var i = 0; i < list.length; i++) {
-		var item = list[i];
-		var id = options.base ? item[0] + options.base : item[0];
-		var css = item[1];
-		var media = item[2];
-		var sourceMap = item[3];
-		var part = {css: css, media: media, sourceMap: sourceMap};
-
-		if(!newStyles[id]) styles.push(newStyles[id] = {id: id, parts: [part]});
-		else newStyles[id].parts.push(part);
-	}
-
-	return styles;
-}
-
-function insertStyleElement (options, style) {
-	var target = getElement(options.insertInto)
-
-	if (!target) {
-		throw new Error("Couldn't find a style target. This probably means that the value for the 'insertInto' parameter is invalid.");
-	}
-
-	var lastStyleElementInsertedAtTop = stylesInsertedAtTop[stylesInsertedAtTop.length - 1];
-
-	if (options.insertAt === "top") {
-		if (!lastStyleElementInsertedAtTop) {
-			target.insertBefore(style, target.firstChild);
-		} else if (lastStyleElementInsertedAtTop.nextSibling) {
-			target.insertBefore(style, lastStyleElementInsertedAtTop.nextSibling);
-		} else {
-			target.appendChild(style);
-		}
-		stylesInsertedAtTop.push(style);
-	} else if (options.insertAt === "bottom") {
-		target.appendChild(style);
-	} else {
-		throw new Error("Invalid value for parameter 'insertAt'. Must be 'top' or 'bottom'.");
-	}
-}
-
-function removeStyleElement (style) {
-	if (style.parentNode === null) return false;
-	style.parentNode.removeChild(style);
-
-	var idx = stylesInsertedAtTop.indexOf(style);
-	if(idx >= 0) {
-		stylesInsertedAtTop.splice(idx, 1);
-	}
-}
-
-function createStyleElement (options) {
-	var style = document.createElement("style");
-
-	options.attrs.type = "text/css";
-
-	addAttrs(style, options.attrs);
-	insertStyleElement(options, style);
-
-	return style;
-}
-
-function createLinkElement (options) {
-	var link = document.createElement("link");
-
-	options.attrs.type = "text/css";
-	options.attrs.rel = "stylesheet";
-
-	addAttrs(link, options.attrs);
-	insertStyleElement(options, link);
-
-	return link;
-}
-
-function addAttrs (el, attrs) {
-	Object.keys(attrs).forEach(function (key) {
-		el.setAttribute(key, attrs[key]);
-	});
-}
-
-function addStyle (obj, options) {
-	var style, update, remove, result;
-
-	// If a transform function was defined, run it on the css
-	if (options.transform && obj.css) {
-	    result = options.transform(obj.css);
-
-	    if (result) {
-	    	// If transform returns a value, use that instead of the original css.
-	    	// This allows running runtime transformations on the css.
-	    	obj.css = result;
-	    } else {
-	    	// If the transform function returns a falsy value, don't add this css.
-	    	// This allows conditional loading of css
-	    	return function() {
-	    		// noop
-	    	};
-	    }
-	}
-
-	if (options.singleton) {
-		var styleIndex = singletonCounter++;
-
-		style = singleton || (singleton = createStyleElement(options));
-
-		update = applyToSingletonTag.bind(null, style, styleIndex, false);
-		remove = applyToSingletonTag.bind(null, style, styleIndex, true);
-
-	} else if (
-		obj.sourceMap &&
-		typeof URL === "function" &&
-		typeof URL.createObjectURL === "function" &&
-		typeof URL.revokeObjectURL === "function" &&
-		typeof Blob === "function" &&
-		typeof btoa === "function"
-	) {
-		style = createLinkElement(options);
-		update = updateLink.bind(null, style, options);
-		remove = function () {
-			removeStyleElement(style);
-
-			if(style.href) URL.revokeObjectURL(style.href);
-		};
-	} else {
-		style = createStyleElement(options);
-		update = applyToTag.bind(null, style);
-		remove = function () {
-			removeStyleElement(style);
-		};
-	}
-
-	update(obj);
-
-	return function updateStyle (newObj) {
-		if (newObj) {
-			if (
-				newObj.css === obj.css &&
-				newObj.media === obj.media &&
-				newObj.sourceMap === obj.sourceMap
-			) {
-				return;
-			}
-
-			update(obj = newObj);
-		} else {
-			remove();
-		}
-	};
-}
-
-var replaceText = (function () {
-	var textStore = [];
-
-	return function (index, replacement) {
-		textStore[index] = replacement;
-
-		return textStore.filter(Boolean).join('\n');
-	};
-})();
-
-function applyToSingletonTag (style, index, remove, obj) {
-	var css = remove ? "" : obj.css;
-
-	if (style.styleSheet) {
-		style.styleSheet.cssText = replaceText(index, css);
-	} else {
-		var cssNode = document.createTextNode(css);
-		var childNodes = style.childNodes;
-
-		if (childNodes[index]) style.removeChild(childNodes[index]);
-
-		if (childNodes.length) {
-			style.insertBefore(cssNode, childNodes[index]);
-		} else {
-			style.appendChild(cssNode);
-		}
-	}
-}
-
-function applyToTag (style, obj) {
-	var css = obj.css;
-	var media = obj.media;
-
-	if(media) {
-		style.setAttribute("media", media)
-	}
-
-	if(style.styleSheet) {
-		style.styleSheet.cssText = css;
-	} else {
-		while(style.firstChild) {
-			style.removeChild(style.firstChild);
-		}
-
-		style.appendChild(document.createTextNode(css));
-	}
-}
-
-function updateLink (link, options, obj) {
-	var css = obj.css;
-	var sourceMap = obj.sourceMap;
-
-	/*
-		If convertToAbsoluteUrls isn't defined, but sourcemaps are enabled
-		and there is no publicPath defined then lets turn convertToAbsoluteUrls
-		on by default.  Otherwise default to the convertToAbsoluteUrls option
-		directly
-	*/
-	var autoFixUrls = options.convertToAbsoluteUrls === undefined && sourceMap;
-
-	if (options.convertToAbsoluteUrls || autoFixUrls) {
-		css = fixUrls(css);
-	}
-
-	if (sourceMap) {
-		// http://stackoverflow.com/a/26603875
-		css += "\n/*# sourceMappingURL=data:application/json;base64," + btoa(unescape(encodeURIComponent(JSON.stringify(sourceMap)))) + " */";
-	}
-
-	var blob = new Blob([css], { type: "text/css" });
-
-	var oldSrc = link.href;
-
-	link.href = URL.createObjectURL(blob);
-
-	if(oldSrc) URL.revokeObjectURL(oldSrc);
-}
-
-
-/***/ }),
-/* 2 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
@@ -10765,44 +10324,448 @@ return jQuery;
 
 
 /***/ }),
-/* 3 */
-/***/ (function(module, exports, __webpack_require__) {
-
-// style-loader: Adds some css to the DOM by adding a <style> tag
-
-// load the styles
-var content = __webpack_require__(8);
-if(typeof content === 'string') content = [[module.i, content, '']];
-// Prepare cssTransformation
-var transform;
-
-var options = {}
-options.transform = transform
-// add the styles to the DOM
-var update = __webpack_require__(1)(content, options);
-if(content.locals) module.exports = content.locals;
-// Hot Module Replacement
-if(false) {
-	// When the styles change, update the <style> tags
-	if(!content.locals) {
-		module.hot.accept("!!../../node_modules/css-loader/index.js!./base_v3.min.css", function() {
-			var newContent = require("!!../../node_modules/css-loader/index.js!./base_v3.min.css");
-			if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
-			update(newContent);
-		});
-	}
-	// When the module is disposed, remove the <style> tags
-	module.hot.dispose(function() { update(); });
-}
-
-/***/ }),
-/* 4 */
+/* 1 */
 /***/ (function(module, exports) {
 
-(function(win){var ratio,scaleValue,renderTime,document=window.document,docElem=document.documentElement,vpm=document.querySelector('meta[name="viewport"]');if(vpm){var tempArray=vpm.getAttribute("content").match(/initial\-scale=(["']?)([\d\.]+)\1?/);if(tempArray){scaleValue=parseFloat(tempArray[2]);ratio=parseInt(1/scaleValue)}}else{vpm=document.createElement("meta");vpm.setAttribute("name","viewport");vpm.setAttribute("content","width=device-width, initial-scale=1, user-scalable=no, minimal-ui");docElem.firstElementChild.appendChild(vpm)}win.addEventListener("resize",function(){clearTimeout(renderTime);renderTime=setTimeout(initPage,300)},false);win.addEventListener("pageshow",function(e){e.persisted&&(clearTimeout(renderTime),renderTime=setTimeout(initPage,300))},false);"complete"===document.readyState?document.body.style.fontSize=12*ratio+"px":document.addEventListener("DOMContentLoaded",function(){document.body.style.fontSize=12*ratio+"px"},false);initPage();function initPage(){var htmlWidth=docElem.getBoundingClientRect().width;htmlWidth/ratio>540&&(htmlWidth=540*ratio);win.rem=htmlWidth/16;docElem.style.fontSize=win.rem+"px"}})(window);
+/*
+	MIT License http://www.opensource.org/licenses/mit-license.php
+	Author Tobias Koppers @sokra
+*/
+// css base code, injected by the css-loader
+module.exports = function(useSourceMap) {
+	var list = [];
+
+	// return the list of modules as css string
+	list.toString = function toString() {
+		return this.map(function (item) {
+			var content = cssWithMappingToString(item, useSourceMap);
+			if(item[2]) {
+				return "@media " + item[2] + "{" + content + "}";
+			} else {
+				return content;
+			}
+		}).join("");
+	};
+
+	// import a list of modules into the list
+	list.i = function(modules, mediaQuery) {
+		if(typeof modules === "string")
+			modules = [[null, modules, ""]];
+		var alreadyImportedModules = {};
+		for(var i = 0; i < this.length; i++) {
+			var id = this[i][0];
+			if(typeof id === "number")
+				alreadyImportedModules[id] = true;
+		}
+		for(i = 0; i < modules.length; i++) {
+			var item = modules[i];
+			// skip already imported module
+			// this implementation is not 100% perfect for weird media query combinations
+			//  when a module is imported multiple times with different media queries.
+			//  I hope this will never occur (Hey this way we have smaller bundles)
+			if(typeof item[0] !== "number" || !alreadyImportedModules[item[0]]) {
+				if(mediaQuery && !item[2]) {
+					item[2] = mediaQuery;
+				} else if(mediaQuery) {
+					item[2] = "(" + item[2] + ") and (" + mediaQuery + ")";
+				}
+				list.push(item);
+			}
+		}
+	};
+	return list;
+};
+
+function cssWithMappingToString(item, useSourceMap) {
+	var content = item[1] || '';
+	var cssMapping = item[3];
+	if (!cssMapping) {
+		return content;
+	}
+
+	if (useSourceMap && typeof btoa === 'function') {
+		var sourceMapping = toComment(cssMapping);
+		var sourceURLs = cssMapping.sources.map(function (source) {
+			return '/*# sourceURL=' + cssMapping.sourceRoot + source + ' */'
+		});
+
+		return [content].concat(sourceURLs).concat([sourceMapping]).join('\n');
+	}
+
+	return [content].join('\n');
+}
+
+// Adapted from convert-source-map (MIT)
+function toComment(sourceMap) {
+	// eslint-disable-next-line no-undef
+	var base64 = btoa(unescape(encodeURIComponent(JSON.stringify(sourceMap))));
+	var data = 'sourceMappingURL=data:application/json;charset=utf-8;base64,' + base64;
+
+	return '/*# ' + data + ' */';
+}
+
 
 /***/ }),
-/* 5 */
+/* 2 */
+/***/ (function(module, exports, __webpack_require__) {
+
+/*
+	MIT License http://www.opensource.org/licenses/mit-license.php
+	Author Tobias Koppers @sokra
+*/
+
+var stylesInDom = {};
+
+var	memoize = function (fn) {
+	var memo;
+
+	return function () {
+		if (typeof memo === "undefined") memo = fn.apply(this, arguments);
+		return memo;
+	};
+};
+
+var isOldIE = memoize(function () {
+	// Test for IE <= 9 as proposed by Browserhacks
+	// @see http://browserhacks.com/#hack-e71d8692f65334173fee715c222cb805
+	// Tests for existence of standard globals is to allow style-loader
+	// to operate correctly into non-standard environments
+	// @see https://github.com/webpack-contrib/style-loader/issues/177
+	return window && document && document.all && !window.atob;
+});
+
+var getElement = (function (fn) {
+	var memo = {};
+
+	return function(selector) {
+		if (typeof memo[selector] === "undefined") {
+			memo[selector] = fn.call(this, selector);
+		}
+
+		return memo[selector]
+	};
+})(function (target) {
+	return document.querySelector(target)
+});
+
+var singleton = null;
+var	singletonCounter = 0;
+var	stylesInsertedAtTop = [];
+
+var	fixUrls = __webpack_require__(8);
+
+module.exports = function(list, options) {
+	if (typeof DEBUG !== "undefined" && DEBUG) {
+		if (typeof document !== "object") throw new Error("The style-loader cannot be used in a non-browser environment");
+	}
+
+	options = options || {};
+
+	options.attrs = typeof options.attrs === "object" ? options.attrs : {};
+
+	// Force single-tag solution on IE6-9, which has a hard limit on the # of <style>
+	// tags it will allow on a page
+	if (!options.singleton) options.singleton = isOldIE();
+
+	// By default, add <style> tags to the <head> element
+	if (!options.insertInto) options.insertInto = "head";
+
+	// By default, add <style> tags to the bottom of the target
+	if (!options.insertAt) options.insertAt = "bottom";
+
+	var styles = listToStyles(list, options);
+
+	addStylesToDom(styles, options);
+
+	return function update (newList) {
+		var mayRemove = [];
+
+		for (var i = 0; i < styles.length; i++) {
+			var item = styles[i];
+			var domStyle = stylesInDom[item.id];
+
+			domStyle.refs--;
+			mayRemove.push(domStyle);
+		}
+
+		if(newList) {
+			var newStyles = listToStyles(newList, options);
+			addStylesToDom(newStyles, options);
+		}
+
+		for (var i = 0; i < mayRemove.length; i++) {
+			var domStyle = mayRemove[i];
+
+			if(domStyle.refs === 0) {
+				for (var j = 0; j < domStyle.parts.length; j++) domStyle.parts[j]();
+
+				delete stylesInDom[domStyle.id];
+			}
+		}
+	};
+};
+
+function addStylesToDom (styles, options) {
+	for (var i = 0; i < styles.length; i++) {
+		var item = styles[i];
+		var domStyle = stylesInDom[item.id];
+
+		if(domStyle) {
+			domStyle.refs++;
+
+			for(var j = 0; j < domStyle.parts.length; j++) {
+				domStyle.parts[j](item.parts[j]);
+			}
+
+			for(; j < item.parts.length; j++) {
+				domStyle.parts.push(addStyle(item.parts[j], options));
+			}
+		} else {
+			var parts = [];
+
+			for(var j = 0; j < item.parts.length; j++) {
+				parts.push(addStyle(item.parts[j], options));
+			}
+
+			stylesInDom[item.id] = {id: item.id, refs: 1, parts: parts};
+		}
+	}
+}
+
+function listToStyles (list, options) {
+	var styles = [];
+	var newStyles = {};
+
+	for (var i = 0; i < list.length; i++) {
+		var item = list[i];
+		var id = options.base ? item[0] + options.base : item[0];
+		var css = item[1];
+		var media = item[2];
+		var sourceMap = item[3];
+		var part = {css: css, media: media, sourceMap: sourceMap};
+
+		if(!newStyles[id]) styles.push(newStyles[id] = {id: id, parts: [part]});
+		else newStyles[id].parts.push(part);
+	}
+
+	return styles;
+}
+
+function insertStyleElement (options, style) {
+	var target = getElement(options.insertInto)
+
+	if (!target) {
+		throw new Error("Couldn't find a style target. This probably means that the value for the 'insertInto' parameter is invalid.");
+	}
+
+	var lastStyleElementInsertedAtTop = stylesInsertedAtTop[stylesInsertedAtTop.length - 1];
+
+	if (options.insertAt === "top") {
+		if (!lastStyleElementInsertedAtTop) {
+			target.insertBefore(style, target.firstChild);
+		} else if (lastStyleElementInsertedAtTop.nextSibling) {
+			target.insertBefore(style, lastStyleElementInsertedAtTop.nextSibling);
+		} else {
+			target.appendChild(style);
+		}
+		stylesInsertedAtTop.push(style);
+	} else if (options.insertAt === "bottom") {
+		target.appendChild(style);
+	} else {
+		throw new Error("Invalid value for parameter 'insertAt'. Must be 'top' or 'bottom'.");
+	}
+}
+
+function removeStyleElement (style) {
+	if (style.parentNode === null) return false;
+	style.parentNode.removeChild(style);
+
+	var idx = stylesInsertedAtTop.indexOf(style);
+	if(idx >= 0) {
+		stylesInsertedAtTop.splice(idx, 1);
+	}
+}
+
+function createStyleElement (options) {
+	var style = document.createElement("style");
+
+	options.attrs.type = "text/css";
+
+	addAttrs(style, options.attrs);
+	insertStyleElement(options, style);
+
+	return style;
+}
+
+function createLinkElement (options) {
+	var link = document.createElement("link");
+
+	options.attrs.type = "text/css";
+	options.attrs.rel = "stylesheet";
+
+	addAttrs(link, options.attrs);
+	insertStyleElement(options, link);
+
+	return link;
+}
+
+function addAttrs (el, attrs) {
+	Object.keys(attrs).forEach(function (key) {
+		el.setAttribute(key, attrs[key]);
+	});
+}
+
+function addStyle (obj, options) {
+	var style, update, remove, result;
+
+	// If a transform function was defined, run it on the css
+	if (options.transform && obj.css) {
+	    result = options.transform(obj.css);
+
+	    if (result) {
+	    	// If transform returns a value, use that instead of the original css.
+	    	// This allows running runtime transformations on the css.
+	    	obj.css = result;
+	    } else {
+	    	// If the transform function returns a falsy value, don't add this css.
+	    	// This allows conditional loading of css
+	    	return function() {
+	    		// noop
+	    	};
+	    }
+	}
+
+	if (options.singleton) {
+		var styleIndex = singletonCounter++;
+
+		style = singleton || (singleton = createStyleElement(options));
+
+		update = applyToSingletonTag.bind(null, style, styleIndex, false);
+		remove = applyToSingletonTag.bind(null, style, styleIndex, true);
+
+	} else if (
+		obj.sourceMap &&
+		typeof URL === "function" &&
+		typeof URL.createObjectURL === "function" &&
+		typeof URL.revokeObjectURL === "function" &&
+		typeof Blob === "function" &&
+		typeof btoa === "function"
+	) {
+		style = createLinkElement(options);
+		update = updateLink.bind(null, style, options);
+		remove = function () {
+			removeStyleElement(style);
+
+			if(style.href) URL.revokeObjectURL(style.href);
+		};
+	} else {
+		style = createStyleElement(options);
+		update = applyToTag.bind(null, style);
+		remove = function () {
+			removeStyleElement(style);
+		};
+	}
+
+	update(obj);
+
+	return function updateStyle (newObj) {
+		if (newObj) {
+			if (
+				newObj.css === obj.css &&
+				newObj.media === obj.media &&
+				newObj.sourceMap === obj.sourceMap
+			) {
+				return;
+			}
+
+			update(obj = newObj);
+		} else {
+			remove();
+		}
+	};
+}
+
+var replaceText = (function () {
+	var textStore = [];
+
+	return function (index, replacement) {
+		textStore[index] = replacement;
+
+		return textStore.filter(Boolean).join('\n');
+	};
+})();
+
+function applyToSingletonTag (style, index, remove, obj) {
+	var css = remove ? "" : obj.css;
+
+	if (style.styleSheet) {
+		style.styleSheet.cssText = replaceText(index, css);
+	} else {
+		var cssNode = document.createTextNode(css);
+		var childNodes = style.childNodes;
+
+		if (childNodes[index]) style.removeChild(childNodes[index]);
+
+		if (childNodes.length) {
+			style.insertBefore(cssNode, childNodes[index]);
+		} else {
+			style.appendChild(cssNode);
+		}
+	}
+}
+
+function applyToTag (style, obj) {
+	var css = obj.css;
+	var media = obj.media;
+
+	if(media) {
+		style.setAttribute("media", media)
+	}
+
+	if(style.styleSheet) {
+		style.styleSheet.cssText = css;
+	} else {
+		while(style.firstChild) {
+			style.removeChild(style.firstChild);
+		}
+
+		style.appendChild(document.createTextNode(css));
+	}
+}
+
+function updateLink (link, options, obj) {
+	var css = obj.css;
+	var sourceMap = obj.sourceMap;
+
+	/*
+		If convertToAbsoluteUrls isn't defined, but sourcemaps are enabled
+		and there is no publicPath defined then lets turn convertToAbsoluteUrls
+		on by default.  Otherwise default to the convertToAbsoluteUrls option
+		directly
+	*/
+	var autoFixUrls = options.convertToAbsoluteUrls === undefined && sourceMap;
+
+	if (options.convertToAbsoluteUrls || autoFixUrls) {
+		css = fixUrls(css);
+	}
+
+	if (sourceMap) {
+		// http://stackoverflow.com/a/26603875
+		css += "\n/*# sourceMappingURL=data:application/json;base64," + btoa(unescape(encodeURIComponent(JSON.stringify(sourceMap)))) + " */";
+	}
+
+	var blob = new Blob([css], { type: "text/css" });
+
+	var oldSrc = link.href;
+
+	link.href = URL.createObjectURL(blob);
+
+	if(oldSrc) URL.revokeObjectURL(oldSrc);
+}
+
+
+/***/ }),
+/* 3 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /*
@@ -10823,35 +10786,34 @@ var Swiper=function(a,b){"use strict";function c(a,b){return document.querySelec
 D.activeIndex=e>=d?c:c+1}}else D.activeIndex=Math[b.visibilityFullFit?"ceil":"round"](-a/F);if(D.activeIndex===D.slides.length&&(D.activeIndex=D.slides.length-1),D.activeIndex<0&&(D.activeIndex=0),D.slides[D.activeIndex]){if(D.calcVisibleSlides(a),D.support.classList){var f;for(c=0;c<D.slides.length;c++)f=D.slides[c],f.classList.remove(b.slideActiveClass),D.visibleSlides.indexOf(f)>=0?f.classList.add(b.slideVisibleClass):f.classList.remove(b.slideVisibleClass);D.slides[D.activeIndex].classList.add(b.slideActiveClass)}else{var g=new RegExp("\\s*"+b.slideActiveClass),h=new RegExp("\\s*"+b.slideVisibleClass);for(c=0;c<D.slides.length;c++)D.slides[c].className=D.slides[c].className.replace(g,"").replace(h,""),D.visibleSlides.indexOf(D.slides[c])>=0&&(D.slides[c].className+=" "+b.slideVisibleClass);D.slides[D.activeIndex].className+=" "+b.slideActiveClass}if(b.loop){var i=D.loopedSlides;D.activeLoopIndex=D.activeIndex-i,D.activeLoopIndex>=D.slides.length-2*i&&(D.activeLoopIndex=D.slides.length-2*i-D.activeLoopIndex),D.activeLoopIndex<0&&(D.activeLoopIndex=D.slides.length-2*i+D.activeLoopIndex),D.activeLoopIndex<0&&(D.activeLoopIndex=0)}else D.activeLoopIndex=D.activeIndex;b.pagination&&D.updatePagination(a)}}},D.createPagination=function(a){if(b.paginationClickable&&D.paginationButtons&&x(),D.paginationContainer=b.pagination.nodeType?b.pagination:c(b.pagination)[0],b.createPagination){var d="",e=D.slides.length,f=e;b.loop&&(f-=2*D.loopedSlides);for(var g=0;f>g;g++)d+="<"+b.paginationElement+' class="'+b.paginationElementClass+'"></'+b.paginationElement+">";D.paginationContainer.innerHTML=d}D.paginationButtons=c("."+b.paginationElementClass,D.paginationContainer),a||D.updatePagination(),D.callPlugins("onCreatePagination"),b.paginationClickable&&y()},D.updatePagination=function(a){if(b.pagination&&!(D.slides.length<1)){var d=c("."+b.paginationActiveClass,D.paginationContainer);if(d){var e=D.paginationButtons;if(0!==e.length){for(var f=0;f<e.length;f++)e[f].className=b.paginationElementClass;var g=b.loop?D.loopedSlides:0;if(b.paginationAsRange){D.visibleSlides||D.calcVisibleSlides(a);var h,i=[];for(h=0;h<D.visibleSlides.length;h++){var j=D.slides.indexOf(D.visibleSlides[h])-g;b.loop&&0>j&&(j=D.slides.length-2*D.loopedSlides+j),b.loop&&j>=D.slides.length-2*D.loopedSlides&&(j=D.slides.length-2*D.loopedSlides-j,j=Math.abs(j)),i.push(j)}for(h=0;h<i.length;h++)e[i[h]]&&(e[i[h]].className+=" "+b.paginationVisibleClass);b.loop?void 0!==e[D.activeLoopIndex]&&(e[D.activeLoopIndex].className+=" "+b.paginationActiveClass):e[D.activeIndex]&&(e[D.activeIndex].className+=" "+b.paginationActiveClass)}else b.loop?e[D.activeLoopIndex]&&(e[D.activeLoopIndex].className+=" "+b.paginationActiveClass+" "+b.paginationVisibleClass):e[D.activeIndex]&&(e[D.activeIndex].className+=" "+b.paginationActiveClass+" "+b.paginationVisibleClass)}}}},D.calcVisibleSlides=function(a){var c=[],d=0,e=0,f=0;N&&D.wrapperLeft>0&&(a+=D.wrapperLeft),!N&&D.wrapperTop>0&&(a+=D.wrapperTop);for(var g=0;g<D.slides.length;g++){d+=e,e="auto"===b.slidesPerView?N?D.h.getWidth(D.slides[g],!0,b.roundLengths):D.h.getHeight(D.slides[g],!0,b.roundLengths):F,f=d+e;var h=!1;b.visibilityFullFit?(d>=-a&&-a+J>=f&&(h=!0),-a>=d&&f>=-a+J&&(h=!0)):(f>-a&&-a+J>=f&&(h=!0),d>=-a&&-a+J>d&&(h=!0),-a>d&&f>-a+J&&(h=!0)),h&&c.push(D.slides[g])}0===c.length&&(c=[D.slides[D.activeIndex]]),D.visibleSlides=c};var ab,bb;D.startAutoplay=function(){if(D.support.transitions){if("undefined"!=typeof ab)return!1;if(!b.autoplay)return;D.callPlugins("onAutoplayStart"),b.onAutoplayStart&&D.fireCallback(b.onAutoplayStart,D),A()}else{if("undefined"!=typeof bb)return!1;if(!b.autoplay)return;D.callPlugins("onAutoplayStart"),b.onAutoplayStart&&D.fireCallback(b.onAutoplayStart,D),bb=setInterval(function(){b.loop?(D.fixLoop(),D.swipeNext(!0,!0)):D.swipeNext(!0,!0)||(b.autoplayStopOnLast?(clearInterval(bb),bb=void 0):D.swipeTo(0))},b.autoplay)}},D.stopAutoplay=function(a){if(D.support.transitions){if(!ab)return;ab&&clearTimeout(ab),ab=void 0,a&&!b.autoplayDisableOnInteraction&&D.wrapperTransitionEnd(function(){A()}),D.callPlugins("onAutoplayStop"),b.onAutoplayStop&&D.fireCallback(b.onAutoplayStop,D)}else bb&&clearInterval(bb),bb=void 0,D.callPlugins("onAutoplayStop"),b.onAutoplayStop&&D.fireCallback(b.onAutoplayStop,D)},D.loopCreated=!1,D.removeLoopedSlides=function(){if(D.loopCreated)for(var a=0;a<D.slides.length;a++)D.slides[a].getData("looped")===!0&&D.wrapper.removeChild(D.slides[a])},D.createLoop=function(){if(0!==D.slides.length){D.loopedSlides="auto"===b.slidesPerView?b.loopedSlides||1:Math.floor(b.slidesPerView)+b.loopAdditionalSlides,D.loopedSlides>D.slides.length&&(D.loopedSlides=D.slides.length);var a,c="",d="",e="",f=D.slides.length,g=Math.floor(D.loopedSlides/f),h=D.loopedSlides%f;for(a=0;g*f>a;a++){var i=a;if(a>=f){var j=Math.floor(a/f);i=a-f*j}e+=D.slides[i].outerHTML}for(a=0;h>a;a++)d+=u(b.slideDuplicateClass,D.slides[a].outerHTML);for(a=f-h;f>a;a++)c+=u(b.slideDuplicateClass,D.slides[a].outerHTML);var k=c+e+E.innerHTML+e+d;for(E.innerHTML=k,D.loopCreated=!0,D.calcSlides(),a=0;a<D.slides.length;a++)(a<D.loopedSlides||a>=D.slides.length-D.loopedSlides)&&D.slides[a].setData("looped",!0);D.callPlugins("onCreateLoop")}},D.fixLoop=function(){var a;D.activeIndex<D.loopedSlides?(a=D.slides.length-3*D.loopedSlides+D.activeIndex,D.swipeTo(a,0,!1)):("auto"===b.slidesPerView&&D.activeIndex>=2*D.loopedSlides||D.activeIndex>D.slides.length-2*b.slidesPerView)&&(a=-D.slides.length+D.activeIndex+D.loopedSlides,D.swipeTo(a,0,!1))},D.loadSlides=function(){var a="";D.activeLoaderIndex=0;for(var c=b.loader.slides,d=b.loader.loadAllSlides?c.length:b.slidesPerView*(1+b.loader.surroundGroups),e=0;d>e;e++)a+="outer"===b.loader.slidesHTMLType?c[e]:"<"+b.slideElement+' class="'+b.slideClass+'" data-swiperindex="'+e+'">'+c[e]+"</"+b.slideElement+">";D.wrapper.innerHTML=a,D.calcSlides(!0),b.loader.loadAllSlides||D.wrapperTransitionEnd(D.reloadSlides,!0)},D.reloadSlides=function(){var a=b.loader.slides,c=parseInt(D.activeSlide().data("swiperindex"),10);if(!(0>c||c>a.length-1)){D.activeLoaderIndex=c;var d=Math.max(0,c-b.slidesPerView*b.loader.surroundGroups),e=Math.min(c+b.slidesPerView*(1+b.loader.surroundGroups)-1,a.length-1);if(c>0){var f=-F*(c-d);D.setWrapperTranslate(f),D.setWrapperTransition(0)}var g;if("reload"===b.loader.logic){D.wrapper.innerHTML="";var h="";for(g=d;e>=g;g++)h+="outer"===b.loader.slidesHTMLType?a[g]:"<"+b.slideElement+' class="'+b.slideClass+'" data-swiperindex="'+g+'">'+a[g]+"</"+b.slideElement+">";D.wrapper.innerHTML=h}else{var i=1e3,j=0;for(g=0;g<D.slides.length;g++){var k=D.slides[g].data("swiperindex");d>k||k>e?D.wrapper.removeChild(D.slides[g]):(i=Math.min(k,i),j=Math.max(k,j))}for(g=d;e>=g;g++){var l;i>g&&(l=document.createElement(b.slideElement),l.className=b.slideClass,l.setAttribute("data-swiperindex",g),l.innerHTML=a[g],D.wrapper.insertBefore(l,D.wrapper.firstChild)),g>j&&(l=document.createElement(b.slideElement),l.className=b.slideClass,l.setAttribute("data-swiperindex",g),l.innerHTML=a[g],D.wrapper.appendChild(l))}}D.reInit(!0)}},B()}};Swiper.prototype={plugins:{},wrapperTransitionEnd:function(a,b){"use strict";function c(h){if(h.target===f&&(a(e),e.params.queueEndCallbacks&&(e._queueEndCallbacks=!1),!b))for(d=0;d<g.length;d++)e.h.removeEventListener(f,g[d],c)}var d,e=this,f=e.wrapper,g=["webkitTransitionEnd","transitionend","oTransitionEnd","MSTransitionEnd","msTransitionEnd"];if(a)for(d=0;d<g.length;d++)e.h.addEventListener(f,g[d],c)},getWrapperTranslate:function(a){"use strict";var b,c,d,e,f=this.wrapper;return"undefined"==typeof a&&(a="horizontal"===this.params.mode?"x":"y"),this.support.transforms&&this.params.useCSS3Transforms?(d=window.getComputedStyle(f,null),window.WebKitCSSMatrix?e=new WebKitCSSMatrix("none"===d.webkitTransform?"":d.webkitTransform):(e=d.MozTransform||d.OTransform||d.MsTransform||d.msTransform||d.transform||d.getPropertyValue("transform").replace("translate(","matrix(1, 0, 0, 1,"),b=e.toString().split(",")),"x"===a&&(c=window.WebKitCSSMatrix?e.m41:parseFloat(16===b.length?b[12]:b[4])),"y"===a&&(c=window.WebKitCSSMatrix?e.m42:parseFloat(16===b.length?b[13]:b[5]))):("x"===a&&(c=parseFloat(f.style.left,10)||0),"y"===a&&(c=parseFloat(f.style.top,10)||0)),c||0},setWrapperTranslate:function(a,b,c){"use strict";var d,e=this.wrapper.style,f={x:0,y:0,z:0};3===arguments.length?(f.x=a,f.y=b,f.z=c):("undefined"==typeof b&&(b="horizontal"===this.params.mode?"x":"y"),f[b]=a),this.support.transforms&&this.params.useCSS3Transforms?(d=this.support.transforms3d?"translate3d("+f.x+"px, "+f.y+"px, "+f.z+"px)":"translate("+f.x+"px, "+f.y+"px)",e.webkitTransform=e.MsTransform=e.msTransform=e.MozTransform=e.OTransform=e.transform=d):(e.left=f.x+"px",e.top=f.y+"px"),this.callPlugins("onSetWrapperTransform",f),this.params.onSetWrapperTransform&&this.fireCallback(this.params.onSetWrapperTransform,this,f)},setWrapperTransition:function(a){"use strict";var b=this.wrapper.style;b.webkitTransitionDuration=b.MsTransitionDuration=b.msTransitionDuration=b.MozTransitionDuration=b.OTransitionDuration=b.transitionDuration=a/1e3+"s",this.callPlugins("onSetWrapperTransition",{duration:a}),this.params.onSetWrapperTransition&&this.fireCallback(this.params.onSetWrapperTransition,this,a)},h:{getWidth:function(a,b,c){"use strict";var d=window.getComputedStyle(a,null).getPropertyValue("width"),e=parseFloat(d);return(isNaN(e)||d.indexOf("%")>0||0>e)&&(e=a.offsetWidth-parseFloat(window.getComputedStyle(a,null).getPropertyValue("padding-left"))-parseFloat(window.getComputedStyle(a,null).getPropertyValue("padding-right"))),b&&(e+=parseFloat(window.getComputedStyle(a,null).getPropertyValue("padding-left"))+parseFloat(window.getComputedStyle(a,null).getPropertyValue("padding-right"))),c?Math.ceil(e):e},getHeight:function(a,b,c){"use strict";if(b)return a.offsetHeight;var d=window.getComputedStyle(a,null).getPropertyValue("height"),e=parseFloat(d);return(isNaN(e)||d.indexOf("%")>0||0>e)&&(e=a.offsetHeight-parseFloat(window.getComputedStyle(a,null).getPropertyValue("padding-top"))-parseFloat(window.getComputedStyle(a,null).getPropertyValue("padding-bottom"))),b&&(e+=parseFloat(window.getComputedStyle(a,null).getPropertyValue("padding-top"))+parseFloat(window.getComputedStyle(a,null).getPropertyValue("padding-bottom"))),c?Math.ceil(e):e},getOffset:function(a){"use strict";var b=a.getBoundingClientRect(),c=document.body,d=a.clientTop||c.clientTop||0,e=a.clientLeft||c.clientLeft||0,f=window.pageYOffset||a.scrollTop,g=window.pageXOffset||a.scrollLeft;return document.documentElement&&!window.pageYOffset&&(f=document.documentElement.scrollTop,g=document.documentElement.scrollLeft),{top:b.top+f-d,left:b.left+g-e}},windowWidth:function(){"use strict";return window.innerWidth?window.innerWidth:document.documentElement&&document.documentElement.clientWidth?document.documentElement.clientWidth:void 0},windowHeight:function(){"use strict";return window.innerHeight?window.innerHeight:document.documentElement&&document.documentElement.clientHeight?document.documentElement.clientHeight:void 0},windowScroll:function(){"use strict";return"undefined"!=typeof pageYOffset?{left:window.pageXOffset,top:window.pageYOffset}:document.documentElement?{left:document.documentElement.scrollLeft,top:document.documentElement.scrollTop}:void 0},addEventListener:function(a,b,c,d){"use strict";"undefined"==typeof d&&(d=!1),a.addEventListener?a.addEventListener(b,c,d):a.attachEvent&&a.attachEvent("on"+b,c)},removeEventListener:function(a,b,c,d){"use strict";"undefined"==typeof d&&(d=!1),a.removeEventListener?a.removeEventListener(b,c,d):a.detachEvent&&a.detachEvent("on"+b,c)}},setTransform:function(a,b){"use strict";var c=a.style;c.webkitTransform=c.MsTransform=c.msTransform=c.MozTransform=c.OTransform=c.transform=b},setTranslate:function(a,b){"use strict";var c=a.style,d={x:b.x||0,y:b.y||0,z:b.z||0},e=this.support.transforms3d?"translate3d("+d.x+"px,"+d.y+"px,"+d.z+"px)":"translate("+d.x+"px,"+d.y+"px)";c.webkitTransform=c.MsTransform=c.msTransform=c.MozTransform=c.OTransform=c.transform=e,this.support.transforms||(c.left=d.x+"px",c.top=d.y+"px")},setTransition:function(a,b){"use strict";var c=a.style;c.webkitTransitionDuration=c.MsTransitionDuration=c.msTransitionDuration=c.MozTransitionDuration=c.OTransitionDuration=c.transitionDuration=b+"ms"},support:{touch:window.Modernizr&&Modernizr.touch===!0||function(){"use strict";return!!("ontouchstart"in window||window.DocumentTouch&&document instanceof DocumentTouch)}(),transforms3d:window.Modernizr&&Modernizr.csstransforms3d===!0||function(){"use strict";var a=document.createElement("div").style;return"webkitPerspective"in a||"MozPerspective"in a||"OPerspective"in a||"MsPerspective"in a||"perspective"in a}(),transforms:window.Modernizr&&Modernizr.csstransforms===!0||function(){"use strict";var a=document.createElement("div").style;return"transform"in a||"WebkitTransform"in a||"MozTransform"in a||"msTransform"in a||"MsTransform"in a||"OTransform"in a}(),transitions:window.Modernizr&&Modernizr.csstransitions===!0||function(){"use strict";var a=document.createElement("div").style;return"transition"in a||"WebkitTransition"in a||"MozTransition"in a||"msTransition"in a||"MsTransition"in a||"OTransition"in a}(),classList:function(){"use strict";var a=document.createElement("div");return"classList"in a}()},browser:{ie8:function(){"use strict";var a=-1;if("Microsoft Internet Explorer"===navigator.appName){var b=navigator.userAgent,c=new RegExp(/MSIE ([0-9]{1,}[\.0-9]{0,})/);null!==c.exec(b)&&(a=parseFloat(RegExp.$1))}return-1!==a&&9>a}(),ie10:window.navigator.msPointerEnabled,ie11:window.navigator.pointerEnabled}},(window.jQuery||window.Zepto)&&!function(a){"use strict";a.fn.swiper=function(b){var c;return this.each(function(d){var e=a(this),f=new Swiper(e[0],b);d||(c=f),e.data("swiper",f)}),c}}(window.jQuery||window.Zepto), true?module.exports=Swiper:"function"==typeof define&&define.amd&&define([],function(){"use strict";return Swiper});
 
 /***/ }),
-/* 6 */
+/* 4 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // 模块
-var Header = __webpack_require__(7);
+var Header = __webpack_require__(5);
 var header = new Header();
 
 // 样式
 
-__webpack_require__(12);
+__webpack_require__(9);
 
 // 自有逻辑
-var Box = __webpack_require__(14);
+var Box = __webpack_require__(11);
 var box = new Box();
 
 /***/ }),
-/* 7 */
+/* 5 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
 
-    var $ = __webpack_require__(2);
+    var $ = __webpack_require__(0);
 
 
-    __webpack_require__(3);
-    __webpack_require__(10);
-    __webpack_require__(4);
-    var Swiper=__webpack_require__(5);
-    
+    __webpack_require__(6);
+
+    var Swiper = __webpack_require__(3);
+
     var Header = function() {
         this.init();
     };
@@ -10866,25 +10828,26 @@ var __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_RESULT__ = function(req
             var that = this;
 
             $('.quickselect-more').on('click', function() {
-               $('.slider-up').show();
+
+                $('.slider-up').show();
 
             });
             $('.slider-header-icon').on('click', function() {
-               $('.slider-up').hide();
+                $('.slider-up').hide();
             });
 
 
-            var mySwiper1 = new Swiper('.slider',{
-                 wrapperClass: 'slider-nav',
+            var mySwiper1 = new Swiper('.slider', {
+                wrapperClass: 'slider-nav',
                 slideClass: 'slider-nav-list',
-                freeMode : true,
-                slidesPerView : 'auto',
-                freeModeSticky : true ,
+                freeMode: true,
+                slidesPerView: 'auto',
+                freeModeSticky: true,
             });
         },
-    /* render: function() {
-            $('.slider-up').show();
-        }*/
+        /* render: function() {
+                $('.slider-up').show();
+            }*/
     };
 
     module.exports = Header;
@@ -10892,21 +10855,52 @@ var __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_RESULT__ = function(req
 				__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 
 /***/ }),
-/* 8 */
+/* 6 */
 /***/ (function(module, exports, __webpack_require__) {
 
-exports = module.exports = __webpack_require__(0)(undefined);
+// style-loader: Adds some css to the DOM by adding a <style> tag
+
+// load the styles
+var content = __webpack_require__(7);
+if(typeof content === 'string') content = [[module.i, content, '']];
+// Prepare cssTransformation
+var transform;
+
+var options = {}
+options.transform = transform
+// add the styles to the DOM
+var update = __webpack_require__(2)(content, options);
+if(content.locals) module.exports = content.locals;
+// Hot Module Replacement
+if(false) {
+	// When the styles change, update the <style> tags
+	if(!content.locals) {
+		module.hot.accept("!!../../../node_modules/css-loader/index.js!./header.css", function() {
+			var newContent = require("!!../../../node_modules/css-loader/index.js!./header.css");
+			if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+			update(newContent);
+		});
+	}
+	// When the module is disposed, remove the <style> tags
+	module.hot.dispose(function() { update(); });
+}
+
+/***/ }),
+/* 7 */
+/***/ (function(module, exports, __webpack_require__) {
+
+exports = module.exports = __webpack_require__(1)(undefined);
 // imports
 
 
 // module
-exports.push([module.i, "html {\r\n    font-family: \"Lantinghei SC\", Helvetica, Arial, sans-serif;\r\n    text-size-adjust: 100%;\r\n    -ms-text-size-adjust: 100%;\r\n    -webkit-text-size-adjust: 100%;\r\n}\r\nbody, div, dl, dt, dd, ul, ol, li, h1, h2, h3, h4, h5, h6, pre, code, form, fieldset, legend, input, textarea, select, p, blockquote, th, td, hr, button, article, aside, details, figcaption, figure, footer, header, hgroup, menu, nav, section {\r\n    margin: 0;\r\n    padding: 0\r\n}\r\nbody {\r\n    color: #434343;\r\n    background-color: white;\r\n    height: 100%;\r\n    overflow-x: hidden;\r\n    -webkit-overflow-scrolling: touch;\r\n}\r\narticle, aside, details, figcaption, figure, footer, header, hgroup, main, nav, section, summary {\r\n    display: block;\r\n}\r\naudio, canvas, progress, video {\r\n    display: inline-block;\r\n    vertical-align: baseline;\r\n}\r\naudio:not([controls]) {\r\n    display: none;\r\n    height: 0;\r\n}\r\n[hidden], template {\r\n    display: none;\r\n}\r\nsvg:not(:root) {\r\n    overflow: hidden;\r\n}\r\na {\r\n    background: transparent;\r\n    text-decoration: none;\r\n    -webkit-tap-highlight-color: transparent;\r\n}\r\na:active {\r\n    outline: 0;\r\n}\r\na:active {\r\n    color: #006699;\r\n}\r\nabbr[title] {\r\n    border-bottom: 1px dotted;\r\n}\r\nb, strong {\r\n    font-weight: bold;\r\n}\r\ndfn {\r\n    font-style: italic;\r\n}\r\nmark {\r\n    background: #ff0;\r\n    color: #000;\r\n}\r\nsmall {\r\n    font-size: 80%;\r\n}\r\nsub, sup {\r\n    font-size: 75%;\r\n    line-height: 0;\r\n    position: relative;\r\n    vertical-align: baseline;\r\n}\r\nsup {\r\n    top: -0.5em;\r\n}\r\nsub {\r\n    bottom: -0.25em;\r\n}\r\nimg, fieldset {\r\n    border: 0;\r\n}\r\nimg {\r\n    vertical-align: middle;\r\n}\r\nhr {\r\n    box-sizing: content-box;\r\n    height: 0;\r\n}\r\npre {\r\n    overflow: auto;\r\n    white-space: pre;\r\n    white-space: pre-wrap;\r\n    word-wrap: break-word;\r\n}\r\ncode, kbd, pre, samp {\r\n    font-family: monospace, monospace;\r\n    font-size: 1em;\r\n}\r\nbutton, input, optgroup, select, textarea {\r\n    color: inherit;\r\n    font: inherit;\r\n}\r\nbutton {\r\n    overflow: visible;\r\n}\r\nbutton, select {\r\n    text-transform: none;\r\n}\r\nbutton, html input[type=\"button\"], input[type=\"reset\"], input[type=\"submit\"] {\r\n    -webkit-appearance: button;\r\n    cursor: pointer;\r\n}\r\nbutton[disabled], html input[disabled] {\r\n    cursor: default;\r\n}\r\ninput {\r\n    line-height: normal;\r\n    outline: none;\r\n}\r\ninput[type=\"checkbox\"], input[type=\"radio\"] {\r\n    box-sizing: border-box;\r\n}\r\ninput[type=\"number\"]::-webkit-inner-spin-button, input[type=\"number\"]::-webkit-outer-spin-button {\r\n    height: auto;\r\n}\r\ninput[type=\"text\"], input[type=\"password\"] {\r\n    -webkit-appearance: none;\r\n}\r\ninput[type=\"search\"] {\r\n    -webkit-appearance: textfield;\r\n    -webkit-box-sizing: border-box;\r\n    box-sizing: border-box;\r\n}\r\ninput[type=\"search\"]::-webkit-search-cancel-button, input[type=\"search\"]::-webkit-search-decoration {\r\n    -webkit-appearance: none;\r\n}\r\nlegend {\r\n    border: 0;\r\n}\r\ntextarea {\r\n    overflow: auto;\r\n    resize: none;\r\n}\r\noptgroup {\r\n    font-weight: bold;\r\n}\r\ntable {\r\n    border-collapse: collapse;\r\n    border-spacing: 0;\r\n}\r\nbutton, input, select, textarea {\r\n    font-family: \"Helvetica Neue\", Helvetica, STHeiTi, Arial, sans-serif;\r\n}\r\nul, ol {\r\n    list-style: none outside none;\r\n}\r\nh1, h2, h3, h4, h5, h6 {\r\n    font-weight: normal;\r\n}\r\ninput:-ms-input-placeholder, textarea:-ms-input-placeholder {\r\n    color: #ccc;\r\n}\r\ninput::-webkit-input-placeholder, textarea::-webkit-input-placeholder {\r\n    color: #ccc;\r\n}\r\ninput[type=\"submit\"], input[type=\"reset\"], input[type=\"button\"] {\r\n    -webkit-appearance: none;\r\n}\r\n* {\r\n    -webkit-box-sizing: border-box;\r\n    box-sizing: border-box;\r\n}\r\n.clearfix:before, .clearfix:after {\r\n    content: \" \";\r\n    display: table\r\n}\r\n.clearfix:after {\r\n    clear: both\r\n}\r\n.fn-hide {\r\n    display: none;\r\n}\r\n.fn-left {\r\n    float: left;\r\n}\r\n.fn-right {\r\n    float: right;\r\n}\r\n.fn-text-overflow {\r\n    overflow: hidden;\r\n    text-overflow: ellipsis;\r\n    white-space: nowrap;\r\n}\r\n.fn-rmb {\r\n    font-family: arial;\r\n    font-style: normal;\r\n}\r\n\r\n/* font */\r\n@font-face {\r\n    font-family: 'icon';\r\n    src: url('http://assets.diandong.com/web/font/common/iconfont.eot');\r\n    src: url('http://assets.diandong.com/web/font/common/iconfont.eot?#iefix') format('embedded-opentype'), url('http://assets.diandong.com/web/font/common/iconfont.woff') format('woff'), url('http://assets.diandong.com/web/font/common/iconfont.ttf') format('truetype'), url('http://assets.diandong.com/web/font/common/iconfont.svg#uxiconfont') format('svg');\r\n}\r\n.icon {\r\n    font-family: \"icon\" !important;\r\n    font-size: 16px;\r\n    font-style: normal;\r\n    -webkit-font-smoothing: antialiased;\r\n    -webkit-text-stroke-width: 0.2px;\r\n    -moz-osx-font-smoothing: grayscale;\r\n}\r\n\r\n/* font end */\r\n\r\n.wrap {\r\n    width: 16rem;\r\n    margin: 0 auto;\r\n}\r\n.cszz_stat {\r\n    font-size: 0;\r\n    height: 0;\r\n    overflow: hidden;\r\n}\r\n\r\n.header.header-fixed {\r\n    position: fixed;\r\n    top: 0;\r\n    right: 0;\r\n    bottom: -5rem;\r\n    left: 0;\r\n    z-index: 1000;\r\n    overflow: hidden;\r\n}\r\n\r\n.header {\r\n    background-color: white;\r\n    position: relative;\r\n    border-bottom: 1px solid #eee;\r\n}\r\n\r\n.header-content .wrap {\r\n    padding: 0.5rem 0.5rem 0.5rem;\r\n    height: 2.1rem;\r\n}\r\n\r\n.logo {\r\n    width: 3.2rem;\r\n    height: 1.1rem;\r\n}\r\n\r\n.logo a {\r\n    height: 0;\r\n    font-size: 0;\r\n    padding-top: 1.1rem;\r\n    overflow: hidden;\r\n    display: block;\r\n    background-image: url(http://i1.dd-img.com/assets/image/1484036498-aab8bc2ce8284ee0-256w-88h.png);\r\n    background-repeat: no-repeat;\r\n    background-size: cover;\r\n}\r\n\r\n.slogan {\r\n    width: 4.6rem;\r\n    height: 1.1rem;\r\n    margin-left: 0.5rem;\r\n}\r\n\r\n.slogan em {\r\n    display: block;\r\n    height: 0;\r\n    font-size: 0;\r\n    overflow: hidden;\r\n    padding-top: 1.1rem;\r\n    background-image: url(http://i1.dd-img.com/assets/image/1482305208-ceb991dce17835bb-184w-44h.png);\r\n    background-repeat: no-repeat;\r\n    background-size: cover;\r\n}\r\n\r\n.header-overlay {\r\n    background-color: white;\r\n    border-top: 1px solid #eee;\r\n}\r\n\r\n.header-overlay-btn {\r\n    width: 1.1rem;\r\n    height: 1.1rem;\r\n    line-height: 1.1rem;\r\n    text-align: center;\r\n}\r\n\r\n.header-overlay-btn i {\r\n    font-size: 0.8rem;\r\n    color: #4f6773;\r\n}\r\n\r\n.header-overlay .wrap {\r\n    padding-top: 0.7rem;\r\n}\r\n\r\n.header-overlay-city {\r\n    height: 1rem;\r\n    line-height: 1rem;\r\n    color: #bababa;\r\n    text-align: center;\r\n}\r\n\r\n.header-search-holder {\r\n    margin-top: 1rem;\r\n}\r\n\r\n.header-overlay-city a {\r\n    color: #00a0e9;\r\n    font-size: 0.55rem;\r\n}\r\n\r\n.header-overlay-city i {\r\n    font-size: 0.6rem;\r\n    display: inline-block;\r\n    margin-right: 0.1rem;\r\n}\r\n\r\n.header-search-holder {\r\n    width: 13.9rem;\r\n    height: 1.6rem;\r\n    margin: 0.9rem auto 0;\r\n}\r\n\r\n.search-bar {\r\n    position: relative;\r\n    width: 13.9rem;\r\n    height: 1.6rem;\r\n    background-color: #f2f2f2;\r\n    border: 1px solid #d8d8d8;\r\n    border-radius: 1.6rem;\r\n    position: relative;\r\n    box-sizing: content-box;\r\n    overflow: hidden;\r\n}\r\n\r\n.search-bar.focus {\r\n    border-color: #00a0e9;\r\n    background-color: white;\r\n}\r\n\r\n.search-submit-btn {\r\n    position: absolute;\r\n    width: 1.5rem;\r\n    height: 1.5rem;\r\n    top: 0;\r\n    right: 0.3rem;\r\n    line-height: 1.5rem;\r\n    text-align: center;\r\n    color: #00a0e9;\r\n}\r\n\r\n.search-submit-btn i {\r\n    font-size: 1rem;\r\n}\r\n\r\n.search-input {\r\n    position: relative;\r\n    width: 12rem;\r\n    height: 1.6rem;\r\n    top: 0;\r\n    left: 0;\r\n    background-color: transparent;\r\n    border-width: 0;\r\n    padding-left: 0.8rem;\r\n    font-size: 0.6rem;\r\n}\r\n\r\n.header-nav-holder {\r\n    width: 13.8rem;\r\n    margin: 1.4rem auto 0;\r\n}\r\n\r\n.nav a {\r\n    float: left;\r\n    width: 4.5rem;\r\n    height: 2.8rem;\r\n    margin: 0 0.05rem 0.1rem;\r\n    text-align: center;\r\n    line-height: 2.8rem;\r\n    color: white;\r\n    font-size: 0.6rem;\r\n}\r\n\r\n.nav-item-home {\r\n    background-color: #00b8ec;\r\n}\r\n\r\n.nav-item-news {\r\n    background-color: #63b1a1;\r\n}\r\n\r\n.nav-item-product {\r\n    background-color: #7d83d6;\r\n}\r\n\r\n.nav-item-test {\r\n    background-color: #5671b3;\r\n}\r\n\r\n.nav-item-video {\r\n    background-color: #b56aad;\r\n}\r\n\r\n.nav-item-mall {\r\n    background-color: #c24c34;\r\n}\r\n\r\n.nav-item-shop {\r\n    background-color: #94bf41;\r\n}\r\n\r\n.nav-item-bbs {\r\n    background-color: #f38c1d;\r\n}\r\n\r\n.nav-item-app {\r\n    background-color: #edbe00;\r\n}\r\n\r\n.user-login-btn {\r\n    width: 2.8rem;\r\n    height: 2.8rem;\r\n    border-radius: 50%;\r\n    border: 1px solid #dbdbdb;\r\n    line-height: 2.8rem;\r\n    text-align: center;\r\n    font-size: 0.7rem;\r\n    display: inline-block;\r\n    vertical-align: top;\r\n    margin: 0 0.5rem;\r\n}\r\n\r\n.user-login-btn a {\r\n    color: #00a0e9;\r\n}\r\n\r\n.user-panel-avatar {\r\n    width: 2.8rem;\r\n    height: 2.8rem;\r\n    border-radius: 50%;\r\n    border: 1px solid #dbdbdb;\r\n    overflow: hidden;\r\n    display: inline-block;\r\n    vertical-align: top;\r\n    margin: 0 0.5rem;\r\n}\r\n\r\n.user-panel-avatar img {\r\n    width: 2.8rem;\r\n    height: 2.8rem;\r\n}\r\n\r\n.user-panel {\r\n    font-size: 0;\r\n    text-align: center;\r\n    margin-top: 2.2rem;\r\n}\r\n\r\n.user-panel i {\r\n    width: 5rem;\r\n    height: 1.4rem;\r\n    border-bottom: 1px solid #dbdbdb;\r\n    display: inline-block;\r\n    vertical-align: top;\r\n}\r\n\r\n.slogan-sub {\r\n    float: left;\r\n    height: 1.1rem;\r\n    margin-left: 0.5rem;\r\n    font-size: 0.75rem;\r\n    color: #506772;\r\n    border-left: 1px solid #dcdcdc;\r\n    padding-left: 0.5rem;\r\n}\r\n\r\n.slogan-sub a {\r\n    color: #506772;\r\n}\r\n.footer-hotline {\r\n    background-color: #697a89;\r\n}\r\n.footer-hotline .wrap {\r\n    height: 1.8rem;\r\n}\r\n.footer-hotline-btn {\r\n    width: 4rem;\r\n    height: 1.8rem;\r\n    background-color: #36a02e;\r\n    color: white;\r\n    line-height: 1.7rem;\r\n    text-align: center;\r\n}\r\n.footer-hotline-btn i {\r\n    font-size: 1.3rem;\r\n}\r\n.hotline-detail {\r\n    height: 0.8rem;\r\n    line-height: 0.8rem;\r\n    color: white;\r\n    font-size: 0.65rem;\r\n}\r\n.hotline-time {\r\n    height: 0.7rem;\r\n    line-height: 0.7rem;\r\n    font-size: 0.45rem;\r\n    color: #cedbe7;\r\n}\r\n.footer-hotline-text {\r\n    padding: 0.2rem 0 0 0.6rem;\r\n}\r\n.footer-link {\r\n    background-color: #2f3942;\r\n}\r\n.footer-link .wrap {\r\n    height: 1.8rem;\r\n    line-height: 1.8rem;\r\n    font-size: 0.55rem;\r\n    color: #b1b8bf;\r\n    padding-left: 0.6rem;\r\n}\r\n.footer-link i {\r\n    font-style: normal;\r\n}\r\n.footer-link a {\r\n    color: #b1b8bf;\r\n}\r\n.footer-sign {\r\n    width: 10.6rem;\r\n    height: 4.1rem;\r\n    background-image: url(http://i1.dd-img.com/assets/image/1458210302-074f0ac9d4452c4b-424w-164h.png);\r\n    background-repeat: no-repeat;\r\n    background-size: cover;\r\n    position: fixed;\r\n    bottom: 0.2rem;\r\n    left: 50%;\r\n    margin-left: -5.3rem;\r\n    display: none;\r\n}\r\n\r\n.return-top-btn {\r\n    position: fixed;\r\n    bottom: 3.8rem;\r\n    right: 0.5rem;\r\n    background-color: rgba(255, 255, 255, 0.7);\r\n    border: 1px solid #d2d2d2;\r\n    border-radius: 50%;\r\n    width: 2rem;\r\n    text-align: center;\r\n    overflow: hidden;\r\n    height: 2rem;\r\n    line-height: 1.9rem;\r\n    display: none;\r\n}\r\n.return-top-btn i {\r\n    font-size: 1.2rem;\r\n    color: #666;\r\n}\r\n\r\n.dd-global-pagination {\r\n    background-color: white;\r\n    height: 1.9rem;\r\n    text-align: center;\r\n    line-height: 1.9rem;\r\n}\r\n.page-item {\r\n    width: 1.9rem;\r\n    height: 1.9rem;\r\n    color: #d2d2d2;\r\n}\r\n.page-item.disabled {\r\n    color: #efefef;\r\n}\r\n.page-item i {\r\n    font-size: 1rem;\r\n}\r\n.page-current {\r\n    font-size: 0.7rem;\r\n    color: #b9b9b9;\r\n}\r\n.page-current em {\r\n    color: #3595e7;\r\n    font-style: normal;\r\n}\r\n", ""]);
+exports.push([module.i, ".fl{\r\n\tfloat: left;\r\n}\r\n.fr{\r\n\tfloat: right;\r\n}\r\n.wrap{\r\n\twidth: 16rem;\r\n    margin: 0 auto;\r\n}\r\n.header{\r\n\tborder: none;\r\n\tpadding: .5rem;\r\n    height: 2.15rem;\r\n}\r\n.community-title{\r\n\twidth: 1.5rem;\r\n\theight: 1rem;\r\n\tborder-radius: .095rem;\r\n\tbackground: #00a0e9;\r\n\ttext-align: center;\r\n\tmargin-left: .25rem;\r\n}\r\n.community-title-h1{\r\n\tdisplay: inline-block;\r\n\tfont-size: .55rem;\r\n\tcolor: #fff;\r\n\tline-height: 1rem;\r\n}\r\n.quickselect-more{\r\n      width: 1rem;\r\n    height: 1.15rem;\r\n    line-height: 1.15rem;\r\n    text-align: center;\r\n}\r\n.slider{\r\n\tborder-left: 1px solid #eee;\r\n\tfont-size: .75rem;\r\n\tmargin-left: .6rem;\r\n\twidth: 8.3rem;\r\n\theight: 1rem;\r\n\toverflow: hidden;\r\n}\r\n\r\n.slider-nav-list {\r\n   display: inline-block;\r\n    color: #b3b9ba;\r\n    padding: 0 .55rem;\r\n}\r\n.slider-nav-active{\r\n\tcolor: #5c6b6e;\r\n}\r\n.slider-up{\r\n\tbackground: #f2f2f2;\r\n\tposition: fixed;\r\n    width: 100%;\r\n    height: 100%;\r\n    left: 0;\r\n    top: 0;\r\n    z-index: 100;\r\n   display: none;\r\n}\r\n.slider-up-header{\r\n\theight:2.15rem;\r\n\tbackground: #fff;\r\n\tline-height: 2.15rem;\r\n\ttext-align: center;\r\n\tposition: relative;\r\n}\r\n.slider-header-icon{\r\n\twidth: 1rem;\r\n    height: 1.15rem;\r\n    margin-left: .6rem;\r\n    position: absolute;\r\n    top: .5rem;\r\n    line-height: 1.15rem;\r\n    text-align: center;\r\n}\r\n.slider-search{\r\n\theight: 1.125rem;\r\n\tmargin: .6rem;\r\n\tborder: 1px solid #dcdcdc;\r\n\tborder-radius: .2rem;\r\n\tbackground: #fff;\r\n}\r\n.slider-search-icon{\r\n    width: 1rem;\r\n    height: 1.125rem;\r\n    line-height: 1rem;\r\n    margin: 0 .22rem;\r\n    text-align: center;\r\n}\r\n.slider-search-icon .icon{\r\n\tfont-size: .6rem;\r\n\tcolor: #a1a1a1;\r\n\r\n}\r\n.slider-search-input{\r\n\tposition: relative;\r\n    width: 12rem;\r\n    height: 1.125rem;\r\n    line-height: 1.125rem;\r\n    padding-left: .3rem;\r\n    top: 0;\r\n    left: 0;\r\n    background-color: transparent;\r\n    border-width: 0;\r\n\tfont-size: .55rem;\r\n\tcolor: #aeaeae;\r\n}\r\n.slider-models{\r\n\tpadding: 0 .6rem;\r\n}\r\n.slider-models-car{\r\n\tclear: both;\r\n}\r\n.slider-models-list{\r\n\twidth: 7.25rem;\r\n\theight: 3.75rem;\r\n\tline-height: 3.75rem;\r\n\tfont-size: .75rem;\r\n\tcolor: #000;\r\n\tmargin-bottom: .25rem;\r\n\tborder-radius: .2rem;\r\n\ttext-align: center;\r\n\tbackground: #cfd8dd;\r\n\tfloat: left;\r\n\tmargin-right: .25rem;\r\n}\r\n.slider-models-list:nth-child(2n){\r\n\tmargin-right: 0;\r\n}\r\n.slider-models-list:nth-child(2),\r\n.slider-models-list:nth-child(3),\r\n.slider-models-list:nth-child(6),\r\n.slider-models-list:nth-child(7),\r\n.slider-models-list:nth-child(10){\r\n\tbackground: #dfe1e3;\r\n}", ""]);
 
 // exports
 
 
 /***/ }),
-/* 9 */
+/* 8 */
 /***/ (function(module, exports) {
 
 
@@ -11001,13 +10995,13 @@ module.exports = function (css) {
 
 
 /***/ }),
-/* 10 */
+/* 9 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // style-loader: Adds some css to the DOM by adding a <style> tag
 
 // load the styles
-var content = __webpack_require__(11);
+var content = __webpack_require__(10);
 if(typeof content === 'string') content = [[module.i, content, '']];
 // Prepare cssTransformation
 var transform;
@@ -11015,52 +11009,7 @@ var transform;
 var options = {}
 options.transform = transform
 // add the styles to the DOM
-var update = __webpack_require__(1)(content, options);
-if(content.locals) module.exports = content.locals;
-// Hot Module Replacement
-if(false) {
-	// When the styles change, update the <style> tags
-	if(!content.locals) {
-		module.hot.accept("!!../../../node_modules/css-loader/index.js!./header.css", function() {
-			var newContent = require("!!../../../node_modules/css-loader/index.js!./header.css");
-			if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
-			update(newContent);
-		});
-	}
-	// When the module is disposed, remove the <style> tags
-	module.hot.dispose(function() { update(); });
-}
-
-/***/ }),
-/* 11 */
-/***/ (function(module, exports, __webpack_require__) {
-
-exports = module.exports = __webpack_require__(0)(undefined);
-// imports
-
-
-// module
-exports.push([module.i, ".fl{\r\n\tfloat: left;\r\n}\r\n.fr{\r\n\tfloat: right;\r\n}\r\n.wrap{\r\n\twidth: 16rem;\r\n    margin: 0 auto;\r\n}\r\n.header{\r\n\tborder: none;\r\n\tpadding: .5rem;\r\n    height: 2.15rem;\r\n}\r\n.community-title{\r\n\twidth: 1.5rem;\r\n\theight: 1rem;\r\n\tborder-radius: .095rem;\r\n\tbackground: #00a0e9;\r\n\ttext-align: center;\r\n\tmargin-left: .25rem;\r\n}\r\n.community-title-h1{\r\n\tdisplay: inline-block;\r\n\tfont-size: .55rem;\r\n\tcolor: #fff;\r\n\tline-height: 1rem;\r\n}\r\n.quickselect-more{\r\n    width: .9rem;\r\n    height: .9rem;\r\n    line-height: .9rem;\r\n    text-align: center;\r\n}\r\n.quickselect-more-icon{\r\n\tbackground: url(http://i1.dd-img.com/assets/image/1497929985-a62280586762cc3e-28w-16h.png) no-repeat center;\r\n\twidth: .7rem;\r\n    height: .4rem;\r\n    display: inline-block;\r\n    background-size: 100% 100%;\r\n}\r\n.slider{\r\n\tborder-left: 1px solid #eee;\r\n\tfont-size: .75rem;\r\n\tmargin-left: .6rem;\r\n\twidth: 8.3rem;\r\n\theight: 1rem;\r\n\toverflow: hidden;\r\n}\r\n\r\n.slider-nav-list {\r\n   display: inline-block;\r\n    color: #b3b9ba;\r\n    padding: 0 .55rem;\r\n}\r\n.slider-nav-active{\r\n\tcolor: #5c6b6e;\r\n}\r\n.slider-up{\r\n\tbackground: #f2f2f2;\r\n\tposition: fixed;\r\n    width: 100%;\r\n    height: 100%;\r\n    left: 0;\r\n    top: 0;\r\n    z-index: 100;\r\n   display: none;\r\n}\r\n.slider-up-header{\r\n\theight:2.15rem;\r\n\tbackground: #fff;\r\n\tline-height: 2.15rem;\r\n\ttext-align: center;\r\n\tposition: relative;\r\n}\r\n.slider-header-icon{\r\n\twidth: 1rem;\r\n    height: 1.15rem;\r\n    margin-left: .6rem;\r\n    position: absolute;\r\n    top: .5rem;\r\n    line-height: 1.15rem;\r\n    text-align: center;\r\n}\r\n.slider-search{\r\n\theight: 1.125rem;\r\n\tmargin: .6rem;\r\n\tborder: 1px solid #dcdcdc;\r\n\tborder-radius: .2rem;\r\n\tbackground: #fff;\r\n}\r\n.slider-search-icon{\r\n    width: 1rem;\r\n    height: 1.125rem;\r\n    line-height: 1rem;\r\n    margin: 0 .22rem;\r\n    text-align: center;\r\n}\r\n.slider-search-icon .icon{\r\n\tfont-size: .6rem;\r\n\tcolor: #a1a1a1;\r\n\r\n}\r\n.slider-search-input{\r\n\tposition: relative;\r\n    width: 12rem;\r\n    height: 1.125rem;\r\n    line-height: 1.125rem;\r\n    padding-left: .3rem;\r\n    top: 0;\r\n    left: 0;\r\n    background-color: transparent;\r\n    border-width: 0;\r\n\tfont-size: .55rem;\r\n\tcolor: #aeaeae;\r\n}\r\n.slider-models{\r\n\tpadding: 0 .6rem;\r\n}\r\n.slider-models-car{\r\n\tclear: both;\r\n}\r\n.slider-models-list{\r\n\twidth: 7.25rem;\r\n\theight: 3.75rem;\r\n\tline-height: 3.75rem;\r\n\tfont-size: .75rem;\r\n\tcolor: #000;\r\n\tmargin-bottom: .25rem;\r\n\tborder-radius: .2rem;\r\n\ttext-align: center;\r\n\tbackground: #cfd8dd;\r\n\tfloat: left;\r\n\tmargin-right: .25rem;\r\n}\r\n.slider-models-list:nth-child(2n){\r\n\tmargin-right: 0;\r\n}\r\n.slider-models-list:nth-child(2),\r\n.slider-models-list:nth-child(3),\r\n.slider-models-list:nth-child(6),\r\n.slider-models-list:nth-child(7),\r\n.slider-models-list:nth-child(10){\r\n\tbackground: #dfe1e3;\r\n}", ""]);
-
-// exports
-
-
-/***/ }),
-/* 12 */
-/***/ (function(module, exports, __webpack_require__) {
-
-// style-loader: Adds some css to the DOM by adding a <style> tag
-
-// load the styles
-var content = __webpack_require__(13);
-if(typeof content === 'string') content = [[module.i, content, '']];
-// Prepare cssTransformation
-var transform;
-
-var options = {}
-options.transform = transform
-// add the styles to the DOM
-var update = __webpack_require__(1)(content, options);
+var update = __webpack_require__(2)(content, options);
 if(content.locals) module.exports = content.locals;
 // Hot Module Replacement
 if(false) {
@@ -11077,10 +11026,10 @@ if(false) {
 }
 
 /***/ }),
-/* 13 */
+/* 10 */
 /***/ (function(module, exports, __webpack_require__) {
 
-exports = module.exports = __webpack_require__(0)(undefined);
+exports = module.exports = __webpack_require__(1)(undefined);
 // imports
 
 
@@ -11091,15 +11040,14 @@ exports.push([module.i, "img {\r\n    vertical-align: middle;\r\n}\r\n.focus,.fo
 
 
 /***/ }),
-/* 14 */
+/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
 
-    var $ = __webpack_require__(2);
-    __webpack_require__(3);
-    __webpack_require__(4);
-     var Swiper=__webpack_require__(5);
+    var $ = __webpack_require__(0);
+
+    var Swiper = __webpack_require__(3);
 
     var Box = function() {
         this.init();
@@ -11114,14 +11062,12 @@ var __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_RESULT__ = function(req
         bindEvent: function() {
             var that = this;
 
-            var mySwiper2 = new Swiper('.focus-swiper-container',{
+            var mySwiper2 = new Swiper('.focus-swiper-container', {
                 wrapperClass: 'focus-swiper-wrapper',
                 slideClass: 'focus-swiper-slide',
                 autoplay: 3000,
                 loop: true,
-                pagination : '.focus-pages',
-               
-               
+                pagination: '.focus-pages',
             });
         },
 
@@ -11130,7 +11076,6 @@ var __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_RESULT__ = function(req
     module.exports = Box;
 }.call(exports, __webpack_require__, exports, module),
 				__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-
 
 /***/ })
 /******/ ]);

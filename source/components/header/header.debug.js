@@ -60,471 +60,29 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 2);
+/******/ 	return __webpack_require__(__webpack_require__.s = 0);
 /******/ })
 /************************************************************************/
 /******/ ([
 /* 0 */
-/***/ (function(module, exports) {
+/***/ (function(module, exports, __webpack_require__) {
 
-/*
-	MIT License http://www.opensource.org/licenses/mit-license.php
-	Author Tobias Koppers @sokra
-*/
-// css base code, injected by the css-loader
-module.exports = function(useSourceMap) {
-	var list = [];
-
-	// return the list of modules as css string
-	list.toString = function toString() {
-		return this.map(function (item) {
-			var content = cssWithMappingToString(item, useSourceMap);
-			if(item[2]) {
-				return "@media " + item[2] + "{" + content + "}";
-			} else {
-				return content;
-			}
-		}).join("");
-	};
-
-	// import a list of modules into the list
-	list.i = function(modules, mediaQuery) {
-		if(typeof modules === "string")
-			modules = [[null, modules, ""]];
-		var alreadyImportedModules = {};
-		for(var i = 0; i < this.length; i++) {
-			var id = this[i][0];
-			if(typeof id === "number")
-				alreadyImportedModules[id] = true;
-		}
-		for(i = 0; i < modules.length; i++) {
-			var item = modules[i];
-			// skip already imported module
-			// this implementation is not 100% perfect for weird media query combinations
-			//  when a module is imported multiple times with different media queries.
-			//  I hope this will never occur (Hey this way we have smaller bundles)
-			if(typeof item[0] !== "number" || !alreadyImportedModules[item[0]]) {
-				if(mediaQuery && !item[2]) {
-					item[2] = mediaQuery;
-				} else if(mediaQuery) {
-					item[2] = "(" + item[2] + ") and (" + mediaQuery + ")";
-				}
-				list.push(item);
-			}
-		}
-	};
-	return list;
-};
-
-function cssWithMappingToString(item, useSourceMap) {
-	var content = item[1] || '';
-	var cssMapping = item[3];
-	if (!cssMapping) {
-		return content;
-	}
-
-	if (useSourceMap && typeof btoa === 'function') {
-		var sourceMapping = toComment(cssMapping);
-		var sourceURLs = cssMapping.sources.map(function (source) {
-			return '/*# sourceURL=' + cssMapping.sourceRoot + source + ' */'
-		});
-
-		return [content].concat(sourceURLs).concat([sourceMapping]).join('\n');
-	}
-
-	return [content].join('\n');
-}
-
-// Adapted from convert-source-map (MIT)
-function toComment(sourceMap) {
-	// eslint-disable-next-line no-undef
-	var base64 = btoa(unescape(encodeURIComponent(JSON.stringify(sourceMap))));
-	var data = 'sourceMappingURL=data:application/json;charset=utf-8;base64,' + base64;
-
-	return '/*# ' + data + ' */';
-}
-
+var Header = __webpack_require__(1);
+var header = new Header();
 
 /***/ }),
 /* 1 */
 /***/ (function(module, exports, __webpack_require__) {
 
-/*
-	MIT License http://www.opensource.org/licenses/mit-license.php
-	Author Tobias Koppers @sokra
-*/
-
-var stylesInDom = {};
-
-var	memoize = function (fn) {
-	var memo;
-
-	return function () {
-		if (typeof memo === "undefined") memo = fn.apply(this, arguments);
-		return memo;
-	};
-};
-
-var isOldIE = memoize(function () {
-	// Test for IE <= 9 as proposed by Browserhacks
-	// @see http://browserhacks.com/#hack-e71d8692f65334173fee715c222cb805
-	// Tests for existence of standard globals is to allow style-loader
-	// to operate correctly into non-standard environments
-	// @see https://github.com/webpack-contrib/style-loader/issues/177
-	return window && document && document.all && !window.atob;
-});
-
-var getElement = (function (fn) {
-	var memo = {};
-
-	return function(selector) {
-		if (typeof memo[selector] === "undefined") {
-			memo[selector] = fn.call(this, selector);
-		}
-
-		return memo[selector]
-	};
-})(function (target) {
-	return document.querySelector(target)
-});
-
-var singleton = null;
-var	singletonCounter = 0;
-var	stylesInsertedAtTop = [];
-
-var	fixUrls = __webpack_require__(7);
-
-module.exports = function(list, options) {
-	if (typeof DEBUG !== "undefined" && DEBUG) {
-		if (typeof document !== "object") throw new Error("The style-loader cannot be used in a non-browser environment");
-	}
-
-	options = options || {};
-
-	options.attrs = typeof options.attrs === "object" ? options.attrs : {};
-
-	// Force single-tag solution on IE6-9, which has a hard limit on the # of <style>
-	// tags it will allow on a page
-	if (!options.singleton) options.singleton = isOldIE();
-
-	// By default, add <style> tags to the <head> element
-	if (!options.insertInto) options.insertInto = "head";
-
-	// By default, add <style> tags to the bottom of the target
-	if (!options.insertAt) options.insertAt = "bottom";
-
-	var styles = listToStyles(list, options);
-
-	addStylesToDom(styles, options);
-
-	return function update (newList) {
-		var mayRemove = [];
-
-		for (var i = 0; i < styles.length; i++) {
-			var item = styles[i];
-			var domStyle = stylesInDom[item.id];
-
-			domStyle.refs--;
-			mayRemove.push(domStyle);
-		}
-
-		if(newList) {
-			var newStyles = listToStyles(newList, options);
-			addStylesToDom(newStyles, options);
-		}
-
-		for (var i = 0; i < mayRemove.length; i++) {
-			var domStyle = mayRemove[i];
-
-			if(domStyle.refs === 0) {
-				for (var j = 0; j < domStyle.parts.length; j++) domStyle.parts[j]();
-
-				delete stylesInDom[domStyle.id];
-			}
-		}
-	};
-};
-
-function addStylesToDom (styles, options) {
-	for (var i = 0; i < styles.length; i++) {
-		var item = styles[i];
-		var domStyle = stylesInDom[item.id];
-
-		if(domStyle) {
-			domStyle.refs++;
-
-			for(var j = 0; j < domStyle.parts.length; j++) {
-				domStyle.parts[j](item.parts[j]);
-			}
-
-			for(; j < item.parts.length; j++) {
-				domStyle.parts.push(addStyle(item.parts[j], options));
-			}
-		} else {
-			var parts = [];
-
-			for(var j = 0; j < item.parts.length; j++) {
-				parts.push(addStyle(item.parts[j], options));
-			}
-
-			stylesInDom[item.id] = {id: item.id, refs: 1, parts: parts};
-		}
-	}
-}
-
-function listToStyles (list, options) {
-	var styles = [];
-	var newStyles = {};
-
-	for (var i = 0; i < list.length; i++) {
-		var item = list[i];
-		var id = options.base ? item[0] + options.base : item[0];
-		var css = item[1];
-		var media = item[2];
-		var sourceMap = item[3];
-		var part = {css: css, media: media, sourceMap: sourceMap};
-
-		if(!newStyles[id]) styles.push(newStyles[id] = {id: id, parts: [part]});
-		else newStyles[id].parts.push(part);
-	}
-
-	return styles;
-}
-
-function insertStyleElement (options, style) {
-	var target = getElement(options.insertInto)
-
-	if (!target) {
-		throw new Error("Couldn't find a style target. This probably means that the value for the 'insertInto' parameter is invalid.");
-	}
-
-	var lastStyleElementInsertedAtTop = stylesInsertedAtTop[stylesInsertedAtTop.length - 1];
-
-	if (options.insertAt === "top") {
-		if (!lastStyleElementInsertedAtTop) {
-			target.insertBefore(style, target.firstChild);
-		} else if (lastStyleElementInsertedAtTop.nextSibling) {
-			target.insertBefore(style, lastStyleElementInsertedAtTop.nextSibling);
-		} else {
-			target.appendChild(style);
-		}
-		stylesInsertedAtTop.push(style);
-	} else if (options.insertAt === "bottom") {
-		target.appendChild(style);
-	} else {
-		throw new Error("Invalid value for parameter 'insertAt'. Must be 'top' or 'bottom'.");
-	}
-}
-
-function removeStyleElement (style) {
-	if (style.parentNode === null) return false;
-	style.parentNode.removeChild(style);
-
-	var idx = stylesInsertedAtTop.indexOf(style);
-	if(idx >= 0) {
-		stylesInsertedAtTop.splice(idx, 1);
-	}
-}
-
-function createStyleElement (options) {
-	var style = document.createElement("style");
-
-	options.attrs.type = "text/css";
-
-	addAttrs(style, options.attrs);
-	insertStyleElement(options, style);
-
-	return style;
-}
-
-function createLinkElement (options) {
-	var link = document.createElement("link");
-
-	options.attrs.type = "text/css";
-	options.attrs.rel = "stylesheet";
-
-	addAttrs(link, options.attrs);
-	insertStyleElement(options, link);
-
-	return link;
-}
-
-function addAttrs (el, attrs) {
-	Object.keys(attrs).forEach(function (key) {
-		el.setAttribute(key, attrs[key]);
-	});
-}
-
-function addStyle (obj, options) {
-	var style, update, remove, result;
-
-	// If a transform function was defined, run it on the css
-	if (options.transform && obj.css) {
-	    result = options.transform(obj.css);
-
-	    if (result) {
-	    	// If transform returns a value, use that instead of the original css.
-	    	// This allows running runtime transformations on the css.
-	    	obj.css = result;
-	    } else {
-	    	// If the transform function returns a falsy value, don't add this css.
-	    	// This allows conditional loading of css
-	    	return function() {
-	    		// noop
-	    	};
-	    }
-	}
-
-	if (options.singleton) {
-		var styleIndex = singletonCounter++;
-
-		style = singleton || (singleton = createStyleElement(options));
-
-		update = applyToSingletonTag.bind(null, style, styleIndex, false);
-		remove = applyToSingletonTag.bind(null, style, styleIndex, true);
-
-	} else if (
-		obj.sourceMap &&
-		typeof URL === "function" &&
-		typeof URL.createObjectURL === "function" &&
-		typeof URL.revokeObjectURL === "function" &&
-		typeof Blob === "function" &&
-		typeof btoa === "function"
-	) {
-		style = createLinkElement(options);
-		update = updateLink.bind(null, style, options);
-		remove = function () {
-			removeStyleElement(style);
-
-			if(style.href) URL.revokeObjectURL(style.href);
-		};
-	} else {
-		style = createStyleElement(options);
-		update = applyToTag.bind(null, style);
-		remove = function () {
-			removeStyleElement(style);
-		};
-	}
-
-	update(obj);
-
-	return function updateStyle (newObj) {
-		if (newObj) {
-			if (
-				newObj.css === obj.css &&
-				newObj.media === obj.media &&
-				newObj.sourceMap === obj.sourceMap
-			) {
-				return;
-			}
-
-			update(obj = newObj);
-		} else {
-			remove();
-		}
-	};
-}
-
-var replaceText = (function () {
-	var textStore = [];
-
-	return function (index, replacement) {
-		textStore[index] = replacement;
-
-		return textStore.filter(Boolean).join('\n');
-	};
-})();
-
-function applyToSingletonTag (style, index, remove, obj) {
-	var css = remove ? "" : obj.css;
-
-	if (style.styleSheet) {
-		style.styleSheet.cssText = replaceText(index, css);
-	} else {
-		var cssNode = document.createTextNode(css);
-		var childNodes = style.childNodes;
-
-		if (childNodes[index]) style.removeChild(childNodes[index]);
-
-		if (childNodes.length) {
-			style.insertBefore(cssNode, childNodes[index]);
-		} else {
-			style.appendChild(cssNode);
-		}
-	}
-}
-
-function applyToTag (style, obj) {
-	var css = obj.css;
-	var media = obj.media;
-
-	if(media) {
-		style.setAttribute("media", media)
-	}
-
-	if(style.styleSheet) {
-		style.styleSheet.cssText = css;
-	} else {
-		while(style.firstChild) {
-			style.removeChild(style.firstChild);
-		}
-
-		style.appendChild(document.createTextNode(css));
-	}
-}
-
-function updateLink (link, options, obj) {
-	var css = obj.css;
-	var sourceMap = obj.sourceMap;
-
-	/*
-		If convertToAbsoluteUrls isn't defined, but sourcemaps are enabled
-		and there is no publicPath defined then lets turn convertToAbsoluteUrls
-		on by default.  Otherwise default to the convertToAbsoluteUrls option
-		directly
-	*/
-	var autoFixUrls = options.convertToAbsoluteUrls === undefined && sourceMap;
-
-	if (options.convertToAbsoluteUrls || autoFixUrls) {
-		css = fixUrls(css);
-	}
-
-	if (sourceMap) {
-		// http://stackoverflow.com/a/26603875
-		css += "\n/*# sourceMappingURL=data:application/json;base64," + btoa(unescape(encodeURIComponent(JSON.stringify(sourceMap)))) + " */";
-	}
-
-	var blob = new Blob([css], { type: "text/css" });
-
-	var oldSrc = link.href;
-
-	link.href = URL.createObjectURL(blob);
-
-	if(oldSrc) URL.revokeObjectURL(oldSrc);
-}
-
-
-/***/ }),
-/* 2 */
-/***/ (function(module, exports, __webpack_require__) {
-
-var Header = __webpack_require__(3);
-var header = new Header();
-
-/***/ }),
-/* 3 */
-/***/ (function(module, exports, __webpack_require__) {
-
 var __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_RESULT__ = function(require, exports, module) {
 
-    var $ = __webpack_require__(4);
+    var $ = __webpack_require__(2);
 
 
-    __webpack_require__(5);
-    __webpack_require__(8);
-    __webpack_require__(10);
-    var Swiper=__webpack_require__(11);
-    
+    __webpack_require__(3);
+
+    var Swiper = __webpack_require__(8);
+
     var Header = function() {
         this.init();
     };
@@ -539,25 +97,26 @@ var __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_RESULT__ = function(req
             var that = this;
 
             $('.quickselect-more').on('click', function() {
-               $('.slider-up').show();
-             
+
+                $('.slider-up').show();
+
             });
             $('.slider-header-icon').on('click', function() {
-               $('.slider-up').hide();
+                $('.slider-up').hide();
             });
 
 
-            var mySwiper1 = new Swiper('.slider',{
-                 wrapperClass: 'slider-nav',
+            var mySwiper1 = new Swiper('.slider', {
+                wrapperClass: 'slider-nav',
                 slideClass: 'slider-nav-list',
-                freeMode : true,
-                slidesPerView : 'auto',
-                freeModeSticky : true ,
+                freeMode: true,
+                slidesPerView: 'auto',
+                freeModeSticky: true,
             });
         },
-    /* render: function() {
-            $('.slider-up').show();
-        }*/
+        /* render: function() {
+                $('.slider-up').show();
+            }*/
     };
 
     module.exports = Header;
@@ -565,7 +124,7 @@ var __WEBPACK_AMD_DEFINE_RESULT__;!(__WEBPACK_AMD_DEFINE_RESULT__ = function(req
 				__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
 
 /***/ }),
-/* 4 */
+/* 2 */
 /***/ (function(module, exports, __webpack_require__) {
 
 var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
@@ -10825,13 +10384,13 @@ return jQuery;
 
 
 /***/ }),
-/* 5 */
+/* 3 */
 /***/ (function(module, exports, __webpack_require__) {
 
 // style-loader: Adds some css to the DOM by adding a <style> tag
 
 // load the styles
-var content = __webpack_require__(6);
+var content = __webpack_require__(4);
 if(typeof content === 'string') content = [[module.i, content, '']];
 // Prepare cssTransformation
 var transform;
@@ -10839,14 +10398,14 @@ var transform;
 var options = {}
 options.transform = transform
 // add the styles to the DOM
-var update = __webpack_require__(1)(content, options);
+var update = __webpack_require__(6)(content, options);
 if(content.locals) module.exports = content.locals;
 // Hot Module Replacement
 if(false) {
 	// When the styles change, update the <style> tags
 	if(!content.locals) {
-		module.hot.accept("!!../../node_modules/css-loader/index.js!./base_v3.min.css", function() {
-			var newContent = require("!!../../node_modules/css-loader/index.js!./base_v3.min.css");
+		module.hot.accept("!!../../../node_modules/css-loader/index.js!./header.css", function() {
+			var newContent = require("!!../../../node_modules/css-loader/index.js!./header.css");
 			if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
 			update(newContent);
 		});
@@ -10856,17 +10415,458 @@ if(false) {
 }
 
 /***/ }),
-/* 6 */
+/* 4 */
 /***/ (function(module, exports, __webpack_require__) {
 
-exports = module.exports = __webpack_require__(0)(undefined);
+exports = module.exports = __webpack_require__(5)(undefined);
 // imports
 
 
 // module
-exports.push([module.i, "html {\r\n    font-family: \"Lantinghei SC\", Helvetica, Arial, sans-serif;\r\n    text-size-adjust: 100%;\r\n    -ms-text-size-adjust: 100%;\r\n    -webkit-text-size-adjust: 100%;\r\n}\r\nbody, div, dl, dt, dd, ul, ol, li, h1, h2, h3, h4, h5, h6, pre, code, form, fieldset, legend, input, textarea, select, p, blockquote, th, td, hr, button, article, aside, details, figcaption, figure, footer, header, hgroup, menu, nav, section {\r\n    margin: 0;\r\n    padding: 0\r\n}\r\nbody {\r\n    color: #434343;\r\n    background-color: white;\r\n    height: 100%;\r\n    overflow-x: hidden;\r\n    -webkit-overflow-scrolling: touch;\r\n}\r\narticle, aside, details, figcaption, figure, footer, header, hgroup, main, nav, section, summary {\r\n    display: block;\r\n}\r\naudio, canvas, progress, video {\r\n    display: inline-block;\r\n    vertical-align: baseline;\r\n}\r\naudio:not([controls]) {\r\n    display: none;\r\n    height: 0;\r\n}\r\n[hidden], template {\r\n    display: none;\r\n}\r\nsvg:not(:root) {\r\n    overflow: hidden;\r\n}\r\na {\r\n    background: transparent;\r\n    text-decoration: none;\r\n    -webkit-tap-highlight-color: transparent;\r\n}\r\na:active {\r\n    outline: 0;\r\n}\r\na:active {\r\n    color: #006699;\r\n}\r\nabbr[title] {\r\n    border-bottom: 1px dotted;\r\n}\r\nb, strong {\r\n    font-weight: bold;\r\n}\r\ndfn {\r\n    font-style: italic;\r\n}\r\nmark {\r\n    background: #ff0;\r\n    color: #000;\r\n}\r\nsmall {\r\n    font-size: 80%;\r\n}\r\nsub, sup {\r\n    font-size: 75%;\r\n    line-height: 0;\r\n    position: relative;\r\n    vertical-align: baseline;\r\n}\r\nsup {\r\n    top: -0.5em;\r\n}\r\nsub {\r\n    bottom: -0.25em;\r\n}\r\nimg, fieldset {\r\n    border: 0;\r\n}\r\nimg {\r\n    vertical-align: middle;\r\n}\r\nhr {\r\n    box-sizing: content-box;\r\n    height: 0;\r\n}\r\npre {\r\n    overflow: auto;\r\n    white-space: pre;\r\n    white-space: pre-wrap;\r\n    word-wrap: break-word;\r\n}\r\ncode, kbd, pre, samp {\r\n    font-family: monospace, monospace;\r\n    font-size: 1em;\r\n}\r\nbutton, input, optgroup, select, textarea {\r\n    color: inherit;\r\n    font: inherit;\r\n}\r\nbutton {\r\n    overflow: visible;\r\n}\r\nbutton, select {\r\n    text-transform: none;\r\n}\r\nbutton, html input[type=\"button\"], input[type=\"reset\"], input[type=\"submit\"] {\r\n    -webkit-appearance: button;\r\n    cursor: pointer;\r\n}\r\nbutton[disabled], html input[disabled] {\r\n    cursor: default;\r\n}\r\ninput {\r\n    line-height: normal;\r\n    outline: none;\r\n}\r\ninput[type=\"checkbox\"], input[type=\"radio\"] {\r\n    box-sizing: border-box;\r\n}\r\ninput[type=\"number\"]::-webkit-inner-spin-button, input[type=\"number\"]::-webkit-outer-spin-button {\r\n    height: auto;\r\n}\r\ninput[type=\"text\"], input[type=\"password\"] {\r\n    -webkit-appearance: none;\r\n}\r\ninput[type=\"search\"] {\r\n    -webkit-appearance: textfield;\r\n    -webkit-box-sizing: border-box;\r\n    box-sizing: border-box;\r\n}\r\ninput[type=\"search\"]::-webkit-search-cancel-button, input[type=\"search\"]::-webkit-search-decoration {\r\n    -webkit-appearance: none;\r\n}\r\nlegend {\r\n    border: 0;\r\n}\r\ntextarea {\r\n    overflow: auto;\r\n    resize: none;\r\n}\r\noptgroup {\r\n    font-weight: bold;\r\n}\r\ntable {\r\n    border-collapse: collapse;\r\n    border-spacing: 0;\r\n}\r\nbutton, input, select, textarea {\r\n    font-family: \"Helvetica Neue\", Helvetica, STHeiTi, Arial, sans-serif;\r\n}\r\nul, ol {\r\n    list-style: none outside none;\r\n}\r\nh1, h2, h3, h4, h5, h6 {\r\n    font-weight: normal;\r\n}\r\ninput:-ms-input-placeholder, textarea:-ms-input-placeholder {\r\n    color: #ccc;\r\n}\r\ninput::-webkit-input-placeholder, textarea::-webkit-input-placeholder {\r\n    color: #ccc;\r\n}\r\ninput[type=\"submit\"], input[type=\"reset\"], input[type=\"button\"] {\r\n    -webkit-appearance: none;\r\n}\r\n* {\r\n    -webkit-box-sizing: border-box;\r\n    box-sizing: border-box;\r\n}\r\n.clearfix:before, .clearfix:after {\r\n    content: \" \";\r\n    display: table\r\n}\r\n.clearfix:after {\r\n    clear: both\r\n}\r\n.fn-hide {\r\n    display: none;\r\n}\r\n.fn-left {\r\n    float: left;\r\n}\r\n.fn-right {\r\n    float: right;\r\n}\r\n.fn-text-overflow {\r\n    overflow: hidden;\r\n    text-overflow: ellipsis;\r\n    white-space: nowrap;\r\n}\r\n.fn-rmb {\r\n    font-family: arial;\r\n    font-style: normal;\r\n}\r\n\r\n/* font */\r\n@font-face {\r\n    font-family: 'icon';\r\n    src: url('http://assets.diandong.com/web/font/common/iconfont.eot');\r\n    src: url('http://assets.diandong.com/web/font/common/iconfont.eot?#iefix') format('embedded-opentype'), url('http://assets.diandong.com/web/font/common/iconfont.woff') format('woff'), url('http://assets.diandong.com/web/font/common/iconfont.ttf') format('truetype'), url('http://assets.diandong.com/web/font/common/iconfont.svg#uxiconfont') format('svg');\r\n}\r\n.icon {\r\n    font-family: \"icon\" !important;\r\n    font-size: 16px;\r\n    font-style: normal;\r\n    -webkit-font-smoothing: antialiased;\r\n    -webkit-text-stroke-width: 0.2px;\r\n    -moz-osx-font-smoothing: grayscale;\r\n}\r\n\r\n/* font end */\r\n\r\n.wrap {\r\n    width: 16rem;\r\n    margin: 0 auto;\r\n}\r\n.cszz_stat {\r\n    font-size: 0;\r\n    height: 0;\r\n    overflow: hidden;\r\n}\r\n\r\n.header.header-fixed {\r\n    position: fixed;\r\n    top: 0;\r\n    right: 0;\r\n    bottom: -5rem;\r\n    left: 0;\r\n    z-index: 1000;\r\n    overflow: hidden;\r\n}\r\n\r\n.header {\r\n    background-color: white;\r\n    position: relative;\r\n    border-bottom: 1px solid #eee;\r\n}\r\n\r\n.header-content .wrap {\r\n    padding: 0.5rem 0.5rem 0.5rem;\r\n    height: 2.1rem;\r\n}\r\n\r\n.logo {\r\n    width: 3.2rem;\r\n    height: 1.1rem;\r\n}\r\n\r\n.logo a {\r\n    height: 0;\r\n    font-size: 0;\r\n    padding-top: 1.1rem;\r\n    overflow: hidden;\r\n    display: block;\r\n    background-image: url(http://i1.dd-img.com/assets/image/1484036498-aab8bc2ce8284ee0-256w-88h.png);\r\n    background-repeat: no-repeat;\r\n    background-size: cover;\r\n}\r\n\r\n.slogan {\r\n    width: 4.6rem;\r\n    height: 1.1rem;\r\n    margin-left: 0.5rem;\r\n}\r\n\r\n.slogan em {\r\n    display: block;\r\n    height: 0;\r\n    font-size: 0;\r\n    overflow: hidden;\r\n    padding-top: 1.1rem;\r\n    background-image: url(http://i1.dd-img.com/assets/image/1482305208-ceb991dce17835bb-184w-44h.png);\r\n    background-repeat: no-repeat;\r\n    background-size: cover;\r\n}\r\n\r\n.header-overlay {\r\n    background-color: white;\r\n    border-top: 1px solid #eee;\r\n}\r\n\r\n.header-overlay-btn {\r\n    width: 1.1rem;\r\n    height: 1.1rem;\r\n    line-height: 1.1rem;\r\n    text-align: center;\r\n}\r\n\r\n.header-overlay-btn i {\r\n    font-size: 0.8rem;\r\n    color: #4f6773;\r\n}\r\n\r\n.header-overlay .wrap {\r\n    padding-top: 0.7rem;\r\n}\r\n\r\n.header-overlay-city {\r\n    height: 1rem;\r\n    line-height: 1rem;\r\n    color: #bababa;\r\n    text-align: center;\r\n}\r\n\r\n.header-search-holder {\r\n    margin-top: 1rem;\r\n}\r\n\r\n.header-overlay-city a {\r\n    color: #00a0e9;\r\n    font-size: 0.55rem;\r\n}\r\n\r\n.header-overlay-city i {\r\n    font-size: 0.6rem;\r\n    display: inline-block;\r\n    margin-right: 0.1rem;\r\n}\r\n\r\n.header-search-holder {\r\n    width: 13.9rem;\r\n    height: 1.6rem;\r\n    margin: 0.9rem auto 0;\r\n}\r\n\r\n.search-bar {\r\n    position: relative;\r\n    width: 13.9rem;\r\n    height: 1.6rem;\r\n    background-color: #f2f2f2;\r\n    border: 1px solid #d8d8d8;\r\n    border-radius: 1.6rem;\r\n    position: relative;\r\n    box-sizing: content-box;\r\n    overflow: hidden;\r\n}\r\n\r\n.search-bar.focus {\r\n    border-color: #00a0e9;\r\n    background-color: white;\r\n}\r\n\r\n.search-submit-btn {\r\n    position: absolute;\r\n    width: 1.5rem;\r\n    height: 1.5rem;\r\n    top: 0;\r\n    right: 0.3rem;\r\n    line-height: 1.5rem;\r\n    text-align: center;\r\n    color: #00a0e9;\r\n}\r\n\r\n.search-submit-btn i {\r\n    font-size: 1rem;\r\n}\r\n\r\n.search-input {\r\n    position: relative;\r\n    width: 12rem;\r\n    height: 1.6rem;\r\n    top: 0;\r\n    left: 0;\r\n    background-color: transparent;\r\n    border-width: 0;\r\n    padding-left: 0.8rem;\r\n    font-size: 0.6rem;\r\n}\r\n\r\n.header-nav-holder {\r\n    width: 13.8rem;\r\n    margin: 1.4rem auto 0;\r\n}\r\n\r\n.nav a {\r\n    float: left;\r\n    width: 4.5rem;\r\n    height: 2.8rem;\r\n    margin: 0 0.05rem 0.1rem;\r\n    text-align: center;\r\n    line-height: 2.8rem;\r\n    color: white;\r\n    font-size: 0.6rem;\r\n}\r\n\r\n.nav-item-home {\r\n    background-color: #00b8ec;\r\n}\r\n\r\n.nav-item-news {\r\n    background-color: #63b1a1;\r\n}\r\n\r\n.nav-item-product {\r\n    background-color: #7d83d6;\r\n}\r\n\r\n.nav-item-test {\r\n    background-color: #5671b3;\r\n}\r\n\r\n.nav-item-video {\r\n    background-color: #b56aad;\r\n}\r\n\r\n.nav-item-mall {\r\n    background-color: #c24c34;\r\n}\r\n\r\n.nav-item-shop {\r\n    background-color: #94bf41;\r\n}\r\n\r\n.nav-item-bbs {\r\n    background-color: #f38c1d;\r\n}\r\n\r\n.nav-item-app {\r\n    background-color: #edbe00;\r\n}\r\n\r\n.user-login-btn {\r\n    width: 2.8rem;\r\n    height: 2.8rem;\r\n    border-radius: 50%;\r\n    border: 1px solid #dbdbdb;\r\n    line-height: 2.8rem;\r\n    text-align: center;\r\n    font-size: 0.7rem;\r\n    display: inline-block;\r\n    vertical-align: top;\r\n    margin: 0 0.5rem;\r\n}\r\n\r\n.user-login-btn a {\r\n    color: #00a0e9;\r\n}\r\n\r\n.user-panel-avatar {\r\n    width: 2.8rem;\r\n    height: 2.8rem;\r\n    border-radius: 50%;\r\n    border: 1px solid #dbdbdb;\r\n    overflow: hidden;\r\n    display: inline-block;\r\n    vertical-align: top;\r\n    margin: 0 0.5rem;\r\n}\r\n\r\n.user-panel-avatar img {\r\n    width: 2.8rem;\r\n    height: 2.8rem;\r\n}\r\n\r\n.user-panel {\r\n    font-size: 0;\r\n    text-align: center;\r\n    margin-top: 2.2rem;\r\n}\r\n\r\n.user-panel i {\r\n    width: 5rem;\r\n    height: 1.4rem;\r\n    border-bottom: 1px solid #dbdbdb;\r\n    display: inline-block;\r\n    vertical-align: top;\r\n}\r\n\r\n.slogan-sub {\r\n    float: left;\r\n    height: 1.1rem;\r\n    margin-left: 0.5rem;\r\n    font-size: 0.75rem;\r\n    color: #506772;\r\n    border-left: 1px solid #dcdcdc;\r\n    padding-left: 0.5rem;\r\n}\r\n\r\n.slogan-sub a {\r\n    color: #506772;\r\n}\r\n.footer-hotline {\r\n    background-color: #697a89;\r\n}\r\n.footer-hotline .wrap {\r\n    height: 1.8rem;\r\n}\r\n.footer-hotline-btn {\r\n    width: 4rem;\r\n    height: 1.8rem;\r\n    background-color: #36a02e;\r\n    color: white;\r\n    line-height: 1.7rem;\r\n    text-align: center;\r\n}\r\n.footer-hotline-btn i {\r\n    font-size: 1.3rem;\r\n}\r\n.hotline-detail {\r\n    height: 0.8rem;\r\n    line-height: 0.8rem;\r\n    color: white;\r\n    font-size: 0.65rem;\r\n}\r\n.hotline-time {\r\n    height: 0.7rem;\r\n    line-height: 0.7rem;\r\n    font-size: 0.45rem;\r\n    color: #cedbe7;\r\n}\r\n.footer-hotline-text {\r\n    padding: 0.2rem 0 0 0.6rem;\r\n}\r\n.footer-link {\r\n    background-color: #2f3942;\r\n}\r\n.footer-link .wrap {\r\n    height: 1.8rem;\r\n    line-height: 1.8rem;\r\n    font-size: 0.55rem;\r\n    color: #b1b8bf;\r\n    padding-left: 0.6rem;\r\n}\r\n.footer-link i {\r\n    font-style: normal;\r\n}\r\n.footer-link a {\r\n    color: #b1b8bf;\r\n}\r\n.footer-sign {\r\n    width: 10.6rem;\r\n    height: 4.1rem;\r\n    background-image: url(http://i1.dd-img.com/assets/image/1458210302-074f0ac9d4452c4b-424w-164h.png);\r\n    background-repeat: no-repeat;\r\n    background-size: cover;\r\n    position: fixed;\r\n    bottom: 0.2rem;\r\n    left: 50%;\r\n    margin-left: -5.3rem;\r\n    display: none;\r\n}\r\n\r\n.return-top-btn {\r\n    position: fixed;\r\n    bottom: 3.8rem;\r\n    right: 0.5rem;\r\n    background-color: rgba(255, 255, 255, 0.7);\r\n    border: 1px solid #d2d2d2;\r\n    border-radius: 50%;\r\n    width: 2rem;\r\n    text-align: center;\r\n    overflow: hidden;\r\n    height: 2rem;\r\n    line-height: 1.9rem;\r\n    display: none;\r\n}\r\n.return-top-btn i {\r\n    font-size: 1.2rem;\r\n    color: #666;\r\n}\r\n\r\n.dd-global-pagination {\r\n    background-color: white;\r\n    height: 1.9rem;\r\n    text-align: center;\r\n    line-height: 1.9rem;\r\n}\r\n.page-item {\r\n    width: 1.9rem;\r\n    height: 1.9rem;\r\n    color: #d2d2d2;\r\n}\r\n.page-item.disabled {\r\n    color: #efefef;\r\n}\r\n.page-item i {\r\n    font-size: 1rem;\r\n}\r\n.page-current {\r\n    font-size: 0.7rem;\r\n    color: #b9b9b9;\r\n}\r\n.page-current em {\r\n    color: #3595e7;\r\n    font-style: normal;\r\n}\r\n", ""]);
+exports.push([module.i, ".fl{\r\n\tfloat: left;\r\n}\r\n.fr{\r\n\tfloat: right;\r\n}\r\n.wrap{\r\n\twidth: 16rem;\r\n    margin: 0 auto;\r\n}\r\n.header{\r\n\tborder: none;\r\n\tpadding: .5rem;\r\n    height: 2.15rem;\r\n}\r\n.community-title{\r\n\twidth: 1.5rem;\r\n\theight: 1rem;\r\n\tborder-radius: .095rem;\r\n\tbackground: #00a0e9;\r\n\ttext-align: center;\r\n\tmargin-left: .25rem;\r\n}\r\n.community-title-h1{\r\n\tdisplay: inline-block;\r\n\tfont-size: .55rem;\r\n\tcolor: #fff;\r\n\tline-height: 1rem;\r\n}\r\n.quickselect-more{\r\n      width: 1rem;\r\n    height: 1.15rem;\r\n    line-height: 1.15rem;\r\n    text-align: center;\r\n}\r\n.slider{\r\n\tborder-left: 1px solid #eee;\r\n\tfont-size: .75rem;\r\n\tmargin-left: .6rem;\r\n\twidth: 8.3rem;\r\n\theight: 1rem;\r\n\toverflow: hidden;\r\n}\r\n\r\n.slider-nav-list {\r\n   display: inline-block;\r\n    color: #b3b9ba;\r\n    padding: 0 .55rem;\r\n}\r\n.slider-nav-active{\r\n\tcolor: #5c6b6e;\r\n}\r\n.slider-up{\r\n\tbackground: #f2f2f2;\r\n\tposition: fixed;\r\n    width: 100%;\r\n    height: 100%;\r\n    left: 0;\r\n    top: 0;\r\n    z-index: 100;\r\n   display: none;\r\n}\r\n.slider-up-header{\r\n\theight:2.15rem;\r\n\tbackground: #fff;\r\n\tline-height: 2.15rem;\r\n\ttext-align: center;\r\n\tposition: relative;\r\n}\r\n.slider-header-icon{\r\n\twidth: 1rem;\r\n    height: 1.15rem;\r\n    margin-left: .6rem;\r\n    position: absolute;\r\n    top: .5rem;\r\n    line-height: 1.15rem;\r\n    text-align: center;\r\n}\r\n.slider-search{\r\n\theight: 1.125rem;\r\n\tmargin: .6rem;\r\n\tborder: 1px solid #dcdcdc;\r\n\tborder-radius: .2rem;\r\n\tbackground: #fff;\r\n}\r\n.slider-search-icon{\r\n    width: 1rem;\r\n    height: 1.125rem;\r\n    line-height: 1rem;\r\n    margin: 0 .22rem;\r\n    text-align: center;\r\n}\r\n.slider-search-icon .icon{\r\n\tfont-size: .6rem;\r\n\tcolor: #a1a1a1;\r\n\r\n}\r\n.slider-search-input{\r\n\tposition: relative;\r\n    width: 12rem;\r\n    height: 1.125rem;\r\n    line-height: 1.125rem;\r\n    padding-left: .3rem;\r\n    top: 0;\r\n    left: 0;\r\n    background-color: transparent;\r\n    border-width: 0;\r\n\tfont-size: .55rem;\r\n\tcolor: #aeaeae;\r\n}\r\n.slider-models{\r\n\tpadding: 0 .6rem;\r\n}\r\n.slider-models-car{\r\n\tclear: both;\r\n}\r\n.slider-models-list{\r\n\twidth: 7.25rem;\r\n\theight: 3.75rem;\r\n\tline-height: 3.75rem;\r\n\tfont-size: .75rem;\r\n\tcolor: #000;\r\n\tmargin-bottom: .25rem;\r\n\tborder-radius: .2rem;\r\n\ttext-align: center;\r\n\tbackground: #cfd8dd;\r\n\tfloat: left;\r\n\tmargin-right: .25rem;\r\n}\r\n.slider-models-list:nth-child(2n){\r\n\tmargin-right: 0;\r\n}\r\n.slider-models-list:nth-child(2),\r\n.slider-models-list:nth-child(3),\r\n.slider-models-list:nth-child(6),\r\n.slider-models-list:nth-child(7),\r\n.slider-models-list:nth-child(10){\r\n\tbackground: #dfe1e3;\r\n}", ""]);
 
 // exports
+
+
+/***/ }),
+/* 5 */
+/***/ (function(module, exports) {
+
+/*
+	MIT License http://www.opensource.org/licenses/mit-license.php
+	Author Tobias Koppers @sokra
+*/
+// css base code, injected by the css-loader
+module.exports = function(useSourceMap) {
+	var list = [];
+
+	// return the list of modules as css string
+	list.toString = function toString() {
+		return this.map(function (item) {
+			var content = cssWithMappingToString(item, useSourceMap);
+			if(item[2]) {
+				return "@media " + item[2] + "{" + content + "}";
+			} else {
+				return content;
+			}
+		}).join("");
+	};
+
+	// import a list of modules into the list
+	list.i = function(modules, mediaQuery) {
+		if(typeof modules === "string")
+			modules = [[null, modules, ""]];
+		var alreadyImportedModules = {};
+		for(var i = 0; i < this.length; i++) {
+			var id = this[i][0];
+			if(typeof id === "number")
+				alreadyImportedModules[id] = true;
+		}
+		for(i = 0; i < modules.length; i++) {
+			var item = modules[i];
+			// skip already imported module
+			// this implementation is not 100% perfect for weird media query combinations
+			//  when a module is imported multiple times with different media queries.
+			//  I hope this will never occur (Hey this way we have smaller bundles)
+			if(typeof item[0] !== "number" || !alreadyImportedModules[item[0]]) {
+				if(mediaQuery && !item[2]) {
+					item[2] = mediaQuery;
+				} else if(mediaQuery) {
+					item[2] = "(" + item[2] + ") and (" + mediaQuery + ")";
+				}
+				list.push(item);
+			}
+		}
+	};
+	return list;
+};
+
+function cssWithMappingToString(item, useSourceMap) {
+	var content = item[1] || '';
+	var cssMapping = item[3];
+	if (!cssMapping) {
+		return content;
+	}
+
+	if (useSourceMap && typeof btoa === 'function') {
+		var sourceMapping = toComment(cssMapping);
+		var sourceURLs = cssMapping.sources.map(function (source) {
+			return '/*# sourceURL=' + cssMapping.sourceRoot + source + ' */'
+		});
+
+		return [content].concat(sourceURLs).concat([sourceMapping]).join('\n');
+	}
+
+	return [content].join('\n');
+}
+
+// Adapted from convert-source-map (MIT)
+function toComment(sourceMap) {
+	// eslint-disable-next-line no-undef
+	var base64 = btoa(unescape(encodeURIComponent(JSON.stringify(sourceMap))));
+	var data = 'sourceMappingURL=data:application/json;charset=utf-8;base64,' + base64;
+
+	return '/*# ' + data + ' */';
+}
+
+
+/***/ }),
+/* 6 */
+/***/ (function(module, exports, __webpack_require__) {
+
+/*
+	MIT License http://www.opensource.org/licenses/mit-license.php
+	Author Tobias Koppers @sokra
+*/
+
+var stylesInDom = {};
+
+var	memoize = function (fn) {
+	var memo;
+
+	return function () {
+		if (typeof memo === "undefined") memo = fn.apply(this, arguments);
+		return memo;
+	};
+};
+
+var isOldIE = memoize(function () {
+	// Test for IE <= 9 as proposed by Browserhacks
+	// @see http://browserhacks.com/#hack-e71d8692f65334173fee715c222cb805
+	// Tests for existence of standard globals is to allow style-loader
+	// to operate correctly into non-standard environments
+	// @see https://github.com/webpack-contrib/style-loader/issues/177
+	return window && document && document.all && !window.atob;
+});
+
+var getElement = (function (fn) {
+	var memo = {};
+
+	return function(selector) {
+		if (typeof memo[selector] === "undefined") {
+			memo[selector] = fn.call(this, selector);
+		}
+
+		return memo[selector]
+	};
+})(function (target) {
+	return document.querySelector(target)
+});
+
+var singleton = null;
+var	singletonCounter = 0;
+var	stylesInsertedAtTop = [];
+
+var	fixUrls = __webpack_require__(7);
+
+module.exports = function(list, options) {
+	if (typeof DEBUG !== "undefined" && DEBUG) {
+		if (typeof document !== "object") throw new Error("The style-loader cannot be used in a non-browser environment");
+	}
+
+	options = options || {};
+
+	options.attrs = typeof options.attrs === "object" ? options.attrs : {};
+
+	// Force single-tag solution on IE6-9, which has a hard limit on the # of <style>
+	// tags it will allow on a page
+	if (!options.singleton) options.singleton = isOldIE();
+
+	// By default, add <style> tags to the <head> element
+	if (!options.insertInto) options.insertInto = "head";
+
+	// By default, add <style> tags to the bottom of the target
+	if (!options.insertAt) options.insertAt = "bottom";
+
+	var styles = listToStyles(list, options);
+
+	addStylesToDom(styles, options);
+
+	return function update (newList) {
+		var mayRemove = [];
+
+		for (var i = 0; i < styles.length; i++) {
+			var item = styles[i];
+			var domStyle = stylesInDom[item.id];
+
+			domStyle.refs--;
+			mayRemove.push(domStyle);
+		}
+
+		if(newList) {
+			var newStyles = listToStyles(newList, options);
+			addStylesToDom(newStyles, options);
+		}
+
+		for (var i = 0; i < mayRemove.length; i++) {
+			var domStyle = mayRemove[i];
+
+			if(domStyle.refs === 0) {
+				for (var j = 0; j < domStyle.parts.length; j++) domStyle.parts[j]();
+
+				delete stylesInDom[domStyle.id];
+			}
+		}
+	};
+};
+
+function addStylesToDom (styles, options) {
+	for (var i = 0; i < styles.length; i++) {
+		var item = styles[i];
+		var domStyle = stylesInDom[item.id];
+
+		if(domStyle) {
+			domStyle.refs++;
+
+			for(var j = 0; j < domStyle.parts.length; j++) {
+				domStyle.parts[j](item.parts[j]);
+			}
+
+			for(; j < item.parts.length; j++) {
+				domStyle.parts.push(addStyle(item.parts[j], options));
+			}
+		} else {
+			var parts = [];
+
+			for(var j = 0; j < item.parts.length; j++) {
+				parts.push(addStyle(item.parts[j], options));
+			}
+
+			stylesInDom[item.id] = {id: item.id, refs: 1, parts: parts};
+		}
+	}
+}
+
+function listToStyles (list, options) {
+	var styles = [];
+	var newStyles = {};
+
+	for (var i = 0; i < list.length; i++) {
+		var item = list[i];
+		var id = options.base ? item[0] + options.base : item[0];
+		var css = item[1];
+		var media = item[2];
+		var sourceMap = item[3];
+		var part = {css: css, media: media, sourceMap: sourceMap};
+
+		if(!newStyles[id]) styles.push(newStyles[id] = {id: id, parts: [part]});
+		else newStyles[id].parts.push(part);
+	}
+
+	return styles;
+}
+
+function insertStyleElement (options, style) {
+	var target = getElement(options.insertInto)
+
+	if (!target) {
+		throw new Error("Couldn't find a style target. This probably means that the value for the 'insertInto' parameter is invalid.");
+	}
+
+	var lastStyleElementInsertedAtTop = stylesInsertedAtTop[stylesInsertedAtTop.length - 1];
+
+	if (options.insertAt === "top") {
+		if (!lastStyleElementInsertedAtTop) {
+			target.insertBefore(style, target.firstChild);
+		} else if (lastStyleElementInsertedAtTop.nextSibling) {
+			target.insertBefore(style, lastStyleElementInsertedAtTop.nextSibling);
+		} else {
+			target.appendChild(style);
+		}
+		stylesInsertedAtTop.push(style);
+	} else if (options.insertAt === "bottom") {
+		target.appendChild(style);
+	} else {
+		throw new Error("Invalid value for parameter 'insertAt'. Must be 'top' or 'bottom'.");
+	}
+}
+
+function removeStyleElement (style) {
+	if (style.parentNode === null) return false;
+	style.parentNode.removeChild(style);
+
+	var idx = stylesInsertedAtTop.indexOf(style);
+	if(idx >= 0) {
+		stylesInsertedAtTop.splice(idx, 1);
+	}
+}
+
+function createStyleElement (options) {
+	var style = document.createElement("style");
+
+	options.attrs.type = "text/css";
+
+	addAttrs(style, options.attrs);
+	insertStyleElement(options, style);
+
+	return style;
+}
+
+function createLinkElement (options) {
+	var link = document.createElement("link");
+
+	options.attrs.type = "text/css";
+	options.attrs.rel = "stylesheet";
+
+	addAttrs(link, options.attrs);
+	insertStyleElement(options, link);
+
+	return link;
+}
+
+function addAttrs (el, attrs) {
+	Object.keys(attrs).forEach(function (key) {
+		el.setAttribute(key, attrs[key]);
+	});
+}
+
+function addStyle (obj, options) {
+	var style, update, remove, result;
+
+	// If a transform function was defined, run it on the css
+	if (options.transform && obj.css) {
+	    result = options.transform(obj.css);
+
+	    if (result) {
+	    	// If transform returns a value, use that instead of the original css.
+	    	// This allows running runtime transformations on the css.
+	    	obj.css = result;
+	    } else {
+	    	// If the transform function returns a falsy value, don't add this css.
+	    	// This allows conditional loading of css
+	    	return function() {
+	    		// noop
+	    	};
+	    }
+	}
+
+	if (options.singleton) {
+		var styleIndex = singletonCounter++;
+
+		style = singleton || (singleton = createStyleElement(options));
+
+		update = applyToSingletonTag.bind(null, style, styleIndex, false);
+		remove = applyToSingletonTag.bind(null, style, styleIndex, true);
+
+	} else if (
+		obj.sourceMap &&
+		typeof URL === "function" &&
+		typeof URL.createObjectURL === "function" &&
+		typeof URL.revokeObjectURL === "function" &&
+		typeof Blob === "function" &&
+		typeof btoa === "function"
+	) {
+		style = createLinkElement(options);
+		update = updateLink.bind(null, style, options);
+		remove = function () {
+			removeStyleElement(style);
+
+			if(style.href) URL.revokeObjectURL(style.href);
+		};
+	} else {
+		style = createStyleElement(options);
+		update = applyToTag.bind(null, style);
+		remove = function () {
+			removeStyleElement(style);
+		};
+	}
+
+	update(obj);
+
+	return function updateStyle (newObj) {
+		if (newObj) {
+			if (
+				newObj.css === obj.css &&
+				newObj.media === obj.media &&
+				newObj.sourceMap === obj.sourceMap
+			) {
+				return;
+			}
+
+			update(obj = newObj);
+		} else {
+			remove();
+		}
+	};
+}
+
+var replaceText = (function () {
+	var textStore = [];
+
+	return function (index, replacement) {
+		textStore[index] = replacement;
+
+		return textStore.filter(Boolean).join('\n');
+	};
+})();
+
+function applyToSingletonTag (style, index, remove, obj) {
+	var css = remove ? "" : obj.css;
+
+	if (style.styleSheet) {
+		style.styleSheet.cssText = replaceText(index, css);
+	} else {
+		var cssNode = document.createTextNode(css);
+		var childNodes = style.childNodes;
+
+		if (childNodes[index]) style.removeChild(childNodes[index]);
+
+		if (childNodes.length) {
+			style.insertBefore(cssNode, childNodes[index]);
+		} else {
+			style.appendChild(cssNode);
+		}
+	}
+}
+
+function applyToTag (style, obj) {
+	var css = obj.css;
+	var media = obj.media;
+
+	if(media) {
+		style.setAttribute("media", media)
+	}
+
+	if(style.styleSheet) {
+		style.styleSheet.cssText = css;
+	} else {
+		while(style.firstChild) {
+			style.removeChild(style.firstChild);
+		}
+
+		style.appendChild(document.createTextNode(css));
+	}
+}
+
+function updateLink (link, options, obj) {
+	var css = obj.css;
+	var sourceMap = obj.sourceMap;
+
+	/*
+		If convertToAbsoluteUrls isn't defined, but sourcemaps are enabled
+		and there is no publicPath defined then lets turn convertToAbsoluteUrls
+		on by default.  Otherwise default to the convertToAbsoluteUrls option
+		directly
+	*/
+	var autoFixUrls = options.convertToAbsoluteUrls === undefined && sourceMap;
+
+	if (options.convertToAbsoluteUrls || autoFixUrls) {
+		css = fixUrls(css);
+	}
+
+	if (sourceMap) {
+		// http://stackoverflow.com/a/26603875
+		css += "\n/*# sourceMappingURL=data:application/json;base64," + btoa(unescape(encodeURIComponent(JSON.stringify(sourceMap)))) + " */";
+	}
+
+	var blob = new Blob([css], { type: "text/css" });
+
+	var oldSrc = link.href;
+
+	link.href = URL.createObjectURL(blob);
+
+	if(oldSrc) URL.revokeObjectURL(oldSrc);
+}
 
 
 /***/ }),
@@ -10966,57 +10966,6 @@ module.exports = function (css) {
 
 /***/ }),
 /* 8 */
-/***/ (function(module, exports, __webpack_require__) {
-
-// style-loader: Adds some css to the DOM by adding a <style> tag
-
-// load the styles
-var content = __webpack_require__(9);
-if(typeof content === 'string') content = [[module.i, content, '']];
-// Prepare cssTransformation
-var transform;
-
-var options = {}
-options.transform = transform
-// add the styles to the DOM
-var update = __webpack_require__(1)(content, options);
-if(content.locals) module.exports = content.locals;
-// Hot Module Replacement
-if(false) {
-	// When the styles change, update the <style> tags
-	if(!content.locals) {
-		module.hot.accept("!!../../../node_modules/css-loader/index.js!./header.css", function() {
-			var newContent = require("!!../../../node_modules/css-loader/index.js!./header.css");
-			if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
-			update(newContent);
-		});
-	}
-	// When the module is disposed, remove the <style> tags
-	module.hot.dispose(function() { update(); });
-}
-
-/***/ }),
-/* 9 */
-/***/ (function(module, exports, __webpack_require__) {
-
-exports = module.exports = __webpack_require__(0)(undefined);
-// imports
-
-
-// module
-exports.push([module.i, ".fl{\r\n\tfloat: left;\r\n}\r\n.fr{\r\n\tfloat: right;\r\n}\r\n.wrap{\r\n\twidth: 16rem;\r\n    margin: 0 auto;\r\n}\r\n.header{\r\n\tborder: none;\r\n\tpadding: .5rem;\r\n    height: 2.15rem;\r\n}\r\n.community-title{\r\n\twidth: 1.5rem;\r\n\theight: 1rem;\r\n\tborder-radius: .095rem;\r\n\tbackground: #00a0e9;\r\n\ttext-align: center;\r\n\tmargin-left: .25rem;\r\n}\r\n.community-title-h1{\r\n\tdisplay: inline-block;\r\n\tfont-size: .55rem;\r\n\tcolor: #fff;\r\n\tline-height: 1rem;\r\n}\r\n.quickselect-more{\r\n    width: .9rem;\r\n    height: .9rem;\r\n    line-height: .9rem;\r\n    text-align: center;\r\n}\r\n.quickselect-more-icon{\r\n\tbackground: url(http://i1.dd-img.com/assets/image/1497929985-a62280586762cc3e-28w-16h.png) no-repeat center;\r\n\twidth: .7rem;\r\n    height: .4rem;\r\n    display: inline-block;\r\n    background-size: 100% 100%;\r\n}\r\n.slider{\r\n\tborder-left: 1px solid #eee;\r\n\tfont-size: .75rem;\r\n\tmargin-left: .6rem;\r\n\twidth: 8.3rem;\r\n\theight: 1rem;\r\n\toverflow: hidden;\r\n}\r\n\r\n.slider-nav-list {\r\n   display: inline-block;\r\n    color: #b3b9ba;\r\n    padding: 0 .55rem;\r\n}\r\n.slider-nav-active{\r\n\tcolor: #5c6b6e;\r\n}\r\n.slider-up{\r\n\tbackground: #f2f2f2;\r\n\tposition: fixed;\r\n    width: 100%;\r\n    height: 100%;\r\n    left: 0;\r\n    top: 0;\r\n    z-index: 100;\r\n   display: none;\r\n}\r\n.slider-up-header{\r\n\theight:2.15rem;\r\n\tbackground: #fff;\r\n\tline-height: 2.15rem;\r\n\ttext-align: center;\r\n\tposition: relative;\r\n}\r\n.slider-header-icon{\r\n\twidth: 1rem;\r\n    height: 1.15rem;\r\n    margin-left: .6rem;\r\n    position: absolute;\r\n    top: .5rem;\r\n    line-height: 1.15rem;\r\n    text-align: center;\r\n}\r\n.slider-search{\r\n\theight: 1.125rem;\r\n\tmargin: .6rem;\r\n\tborder: 1px solid #dcdcdc;\r\n\tborder-radius: .2rem;\r\n\tbackground: #fff;\r\n}\r\n.slider-search-icon{\r\n    width: 1rem;\r\n    height: 1.125rem;\r\n    line-height: 1rem;\r\n    margin: 0 .22rem;\r\n    text-align: center;\r\n}\r\n.slider-search-icon .icon{\r\n\tfont-size: .6rem;\r\n\tcolor: #a1a1a1;\r\n\r\n}\r\n.slider-search-input{\r\n\tposition: relative;\r\n    width: 12rem;\r\n    height: 1.125rem;\r\n    line-height: 1.125rem;\r\n    padding-left: .3rem;\r\n    top: 0;\r\n    left: 0;\r\n    background-color: transparent;\r\n    border-width: 0;\r\n\tfont-size: .55rem;\r\n\tcolor: #aeaeae;\r\n}\r\n.slider-models{\r\n\tpadding: 0 .6rem;\r\n}\r\n.slider-models-car{\r\n\tclear: both;\r\n}\r\n.slider-models-list{\r\n\twidth: 7.25rem;\r\n\theight: 3.75rem;\r\n\tline-height: 3.75rem;\r\n\tfont-size: .75rem;\r\n\tcolor: #000;\r\n\tmargin-bottom: .25rem;\r\n\tborder-radius: .2rem;\r\n\ttext-align: center;\r\n\tbackground: #cfd8dd;\r\n\tfloat: left;\r\n\tmargin-right: .25rem;\r\n}\r\n.slider-models-list:nth-child(2n){\r\n\tmargin-right: 0;\r\n}\r\n.slider-models-list:nth-child(2),\r\n.slider-models-list:nth-child(3),\r\n.slider-models-list:nth-child(6),\r\n.slider-models-list:nth-child(7),\r\n.slider-models-list:nth-child(10){\r\n\tbackground: #dfe1e3;\r\n}", ""]);
-
-// exports
-
-
-/***/ }),
-/* 10 */
-/***/ (function(module, exports) {
-
-(function(win){var ratio,scaleValue,renderTime,document=window.document,docElem=document.documentElement,vpm=document.querySelector('meta[name="viewport"]');if(vpm){var tempArray=vpm.getAttribute("content").match(/initial\-scale=(["']?)([\d\.]+)\1?/);if(tempArray){scaleValue=parseFloat(tempArray[2]);ratio=parseInt(1/scaleValue)}}else{vpm=document.createElement("meta");vpm.setAttribute("name","viewport");vpm.setAttribute("content","width=device-width, initial-scale=1, user-scalable=no, minimal-ui");docElem.firstElementChild.appendChild(vpm)}win.addEventListener("resize",function(){clearTimeout(renderTime);renderTime=setTimeout(initPage,300)},false);win.addEventListener("pageshow",function(e){e.persisted&&(clearTimeout(renderTime),renderTime=setTimeout(initPage,300))},false);"complete"===document.readyState?document.body.style.fontSize=12*ratio+"px":document.addEventListener("DOMContentLoaded",function(){document.body.style.fontSize=12*ratio+"px"},false);initPage();function initPage(){var htmlWidth=docElem.getBoundingClientRect().width;htmlWidth/ratio>540&&(htmlWidth=540*ratio);win.rem=htmlWidth/16;docElem.style.fontSize=win.rem+"px"}})(window);
-
-/***/ }),
-/* 11 */
 /***/ (function(module, exports, __webpack_require__) {
 
 /*
