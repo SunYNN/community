@@ -1,11 +1,11 @@
-// 模块
+/*// 模块
 var Header = require('./components/header/Header');
 var header = new Header();
-
+*/
 // 样式
 
-require('./css/index/index.css');
+require('./css/post/post_text.css');
 
 // 自有逻辑
-var Box = require('./js/index/index.js');
+var Box = require('./js/post/PostText.js');
 var box = new Box();

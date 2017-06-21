@@ -4,11 +4,11 @@ var path = require('path');
 module.exports = {
 
     entry: {
-        header: path.resolve(__dirname, 'source/components/header/app.js')
+        upload: path.resolve(__dirname, 'source/components/upload/app.js')
     },
 
     output: {
-        path: path.resolve(__dirname, 'source/components/header'),
+        path: path.resolve(__dirname, 'source/components/upload'),
         filename: '[name].debug.js'
     },
 
@@ -21,9 +21,9 @@ module.exports = {
     
         ]
     },
-     resolve: {
+  /*   resolve: {
         alias: {
             swiper: path.resolve(__dirname, 'source/lib/swiper/idangerous.swiper.min'),
         }
-    }
+    }*/
 };
