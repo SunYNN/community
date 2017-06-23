@@ -10,6 +10,7 @@
     <meta name="applicable-device" content="mobile">
     <link rel="stylesheet" href="source/css/base_v3.min.css">
     <script src="source/js/flexible/rem.min.js"></script>
+    <link rel="stylesheet" href="source/css/post/post_text.css">
 </head>
 <body>
 <div class="main-wrap">
@@ -28,27 +29,61 @@
 			<button><a href="javascript:;">发布</a></button>
 		</div>
 	</header>
-	<div class="addcover">
-		<i class="icon addcover-icon">&#xe64f;</i>
-		添加封面
-	</div>
+	<div class="headers"></div>
+	<form action="">
+
 	<div class="addcover-title">
 		<input type="text" placeholder="请输入标题（6-30个字）" class="addcover-title-input">
 	</div>
 	<div class="addcover-classify">
 		<div class="addcover-classify-key fl">分类（必填）</div>
-		<div class="addcover-classify-val fr">请选择一个分类</div>
-		<i class="icon addcover-classify-icon">&#xe603;</i>
+		<div class="addcover-classify-val fr">请选择一个分类<i class="icon addcover-classify-icon">&#xe603;</i></div>
+		
 	</div>
 	<div class="addcover-classify">
 		<div class="addcover-classify-key fl">分类（必填）</div>
-		<div class="addcover-classify-val fr"><span>北汽-EU260</span></div>
-		<i class="icon addcover-classify-icon">&#xe603;</i>
+		<div class="addcover-classify-val fr"><span>北汽-EU260</span><i class="icon addcover-classify-icon">&#xe603;</i></div>
+		
 	</div>
 	<div class="addcover-bottom">
-		<div class="addcover-text"><i class="icon">&#xe64f;</i>添加文字</div>
-		<div class="addcover-picture"><i class="addcover-picture-icon"><img src="http://i1.dd-img.com/assets/image/1498040281-241897db63039e6e-200w-200h.png"></i>添加图片</div>
+		<div class="addcover-text" addval=""><i class="icon addcover-text-icon">&#xe64f;</i>添加文字</div>
+		<div class="addcover-picture" addval="">
+		<input type="file" name="">
+			<i class="addcover-picture-icon">
+			<img src="http://i1.dd-img.com/assets/image/1498040281-241897db63039e6e-200w-200h.png">
+			</i>添加图片
+		</div>
 	</div>
+<!-- 	<div class="addto-text" data-id="">
+		<div class="addto-text-h2">
+			<i class="addto-text-upicon fl"><img src="http://i1.dd-img.com/assets/image/1498100345-3dd97d0180887b7c-200w-200h.png"></i>
+			<i class="addto-text-downicon fl"><img src="http://i1.dd-img.com/assets/image/1498100345-3b7b4997430f46b7-200w-200h.png"></i>
+			<span class="addto-texts fl">调整排序</span>
+			<i class="addto-text-closeicon icon fr">&#xe601;</i>
+		</div>
+		<div class="addto-textbox">
+			<textarea class="addto-textbox-textarea" name="textarea"  placeholder="请输入文字"></textarea>
+		</div>
+	</div>
+	 -->	
+<!-- 	 <div class="addto-picture">
+		<div class="addto-text-h2">
+			<i class="addto-text-upicon fl"><img src="http://i1.dd-img.com/assets/image/1498100345-3dd97d0180887b7c-200w-200h.png"></i>
+			<i class="addto-text-downicon fl"><img src="http://i1.dd-img.com/assets/image/1498100345-3b7b4997430f46b7-200w-200h.png"></i>
+			<span class="addto-texts fl">调整排序</span>
+			<i class="addto-text-closeicon icon fr">&#xe601;</i>
+		</div>
+		<div class="addto-picturebox">
+			<img src="http://bbs.diandong.com/data/attachment/forum/201704/17/201136lfges4b4itff2xoi.jpg" alt="">
+			<div class="addto-picturebox-text">
+				<input type="text" placeholder="添加注释" value="添加注释">
+			</div>
+			<div class="addto-picturebox-setcover">设为封面</div>
+			<div class="addto-picturebox-intocover"><i class="icon addto-picturebox-intocover-checkicon">&#xe600;</i>封面</div>
+		</div>
+	</div> -->
+	<div class="footers"></div>
+	</form>
 
 	
 </div>

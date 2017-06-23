@@ -4,7 +4,7 @@ var header = new Header();
 */
 // 样式
 
-require('./css/post/post_text.css');
+/*require('./css/post/post_text.css');*/
 
 // 自有逻辑
 var Box = require('./js/post/PostText.js');

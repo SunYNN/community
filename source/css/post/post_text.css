@@ -1,16 +1,28 @@
 .main-wrap {
   display: -webkit-box;
   -webkit-box-orient: vertical;
+  background: #f7f7f7;
 }
 .main-wrap header {
   width: 100%;
   height: 2.1rem;
-  background-color: none;
+  background-color:#fff;
   border-bottom: 1px solid #dcdcdc;
   display: -webkit-box;
   -webkit-box-orient: horizontal;
   text-align: center;
   line-height: 2.1rem;
+  position: fixed;
+  top: 0;
+}
+.headers{
+  width: 100%;
+    height: 2.1rem;
+}
+.footers{
+  width: 100%;
+      height: 1.75rem;
+      margin-top: .5rem;
 }
 .main-wrap header .close {
   padding: 0 0.6rem;
@@ -87,9 +99,10 @@
     font-size: 1.2rem;
 }
 .addcover-title{
-  padding: 0 .625rem;
-  height: 1.4rem;
-  line-height: 1.4rem;
+  margin: 0 .625rem;
+  height: 2rem;
+  line-height: 2rem;
+  margin-top: .7rem;
 }
 .addcover-title-input{
     width: 12rem;
@@ -106,25 +119,26 @@
   background: #fff;
   border-top: 1px solid #eee;
   border-bottom: 1px solid #eee;
-  padding: 0 1rem;
   font-size: .6rem;
-  position: relative;
+  margin: 0 .625rem;
 
+}
+.addcover-classify-val{
+  color: #aeaeae;
 }
 .addcover-classify-val span{
   color: #1f87e0;
 }
 .addcover-classify-icon{
-position: absolute;
     width: .9rem;
-    right: .2rem;
-    top: 0.4rem;
     height: .9rem;
     line-height: .9rem;
     text-align: center;
     font-size: .5rem;
 }
 .addcover-bottom{
+  background: #fff;
+  z-index: 999;
     display: -webkit-box;
     -webkit-box-orient: horizontal;
     width: 100%;
@@ -136,18 +150,32 @@ position: absolute;
 
 }
 .addcover-text,.addcover-picture{
-     height: 1.05rem;
-    line-height: 1.05rem;
+      height: 1.75rem;
+    line-height: 1.75rem;
   -webkit-box-flex: 1;
-    color: #939698;
+    color: #343d40;
     font-size: 0.55rem;
     text-align: center;
-        margin: .32rem 0;
 }
 .addcover-picture{
  border-left: 1px solid #eee;
+     position: relative;
+     overflow: hidden;
+    z-index: 1;
 }
-.addcover-picture-icon{
+.addcover-picture input{
+    position: absolute;
+    height: 1.75rem;
+    opacity: 0;
+    filter: "alpha(opacity=0)";
+    filter: alpha(opacity=0);
+    -moz-opacity: 0;
+    left: 0;
+    top: 0;
+    cursor: pointer;
+    z-index: 5;
+}
+.addcover-picture-icon,.addcover-text-icon{
   width: 1rem;
   display: inline-block;
   margin-right: .3rem;
@@ -155,3 +183,101 @@ position: absolute;
 .addcover-picture-icon img{
   width: 100%;
 }
+.addto-text,.addto-picture{
+  margin: 0 .625rem;
+  height: 9.05rem;
+  background: #e1e3e5;
+  margin-top: .55rem;
+}
+.addto-text-h2{
+  height: 1.5rem;
+  line-height: 1.5rem;
+
+}
+.addto-textbox{
+  height: 7.25rem;
+  background: #fff;
+  margin:.25rem;
+  margin-top:0;
+}
+.addto-textbox-textarea{
+  display: block;
+  font-size: .65rem;
+  color: #aeaeae;
+  padding: .5rem;
+  line-height: .8rem;
+  border: none;
+  height:7.25rem;
+  width: 100%;
+}
+.addto-picture{
+  height: 11.325rem;
+}
+.addto-picturebox{
+  height: 9.825rem;
+  position: relative;
+  background: #fff;
+  overflow: hidden;
+}
+.addto-picturebox img{
+  width: 100%;
+}
+.addto-picturebox-setcover,.addto-picturebox-intocover{
+    padding: 0 .5rem;
+    border-radius: 1rem;
+    height: 1.25rem;
+    line-height: 1.25rem;
+    color: #fff;
+    font-size: .6rem;
+    position: absolute;
+    top: .675rem;
+
+}
+.addto-picturebox-setcover{
+  background-color: rgba(0,0,0,.4);
+  right: .675rem;
+}
+.addto-picturebox-intocover{
+ background-color: #1f87e0;
+ left: .675rem;
+}
+.addto-picturebox-text{
+  height: 1.45rem;
+  line-height: 1.45rem;
+  color: #fff;
+   background-color: rgba(0,0,0,.4);
+   padding:0 .675rem;
+   position: absolute;
+   bottom: 0;
+   width: 100%;
+}
+.addto-picturebox-text input{
+  width: 100%;
+  padding-left: .25rem;
+  color: #fff;
+  font-size: .65rem;
+      height: 1.45rem;
+    border: none;
+    background: none;
+
+}
+.addto-text-upicon,.addto-text-downicon,.addto-text-closeicon{
+    width: .725rem;
+    height: 1.5rem;
+    margin: 0 .3rem;
+}
+.addto-text-closeicon{
+    text-align: center;
+    font-size: .6rem;
+}
+.addto-text-upicon img,.addto-text-downicon img{
+  width: 100%;
+}
+.addto-picturebox-intocover-checkicon{
+  margin-right: .1rem;
+}
+.addto-texts{
+    margin: 0 .5rem;
+}
+
+
