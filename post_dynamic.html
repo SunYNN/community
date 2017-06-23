@@ -12,183 +12,34 @@
 </head>
 
 <body>
-
-    <div class="wrap clearfix">
-        <a href="/live/detail/22/" class="back-button">返回</a>
+    <div class="upload" id="upload_img">
+        <div class="upload-item">
+            <input type="file" name="headpic[]" class="headpicinput_1" id="headpicinput_1" style="display: none;" onchange="UpLoad(this)">
+            <input type="hidden" id="imgUrl_1" class="imgUrl" name="pics[]" value="">
+            <div id="" class="cell cell_1">
+                <a href="javascript:void(0);">
+                <img src="http://i1.dd-img.com/assets/image/1495764543-95352fde674ead19-200w-200h.png" id="preViewImg_1" class="preViewImg">
+                </a>
+            </div>
+        </div>
     </div>
+      
 
-    <div class="">
-        <form action="/live/savePub/" method="post" onsubmit="return ckform()">
-            <input type="hidden" name="liveId" value="22" />
-            <input type="hidden" name="pid" value="" />
-
-            <div class="edit-item edit-item-text">
-                <header class="edit-item-header">
-                    <h3>推文</h3>
-                </header>
-                <div class="edit-item-content">
-                    <textarea name="summary" id="summary" placeholder="活动推文"></textarea>
-                </div>
-            </div>
-
-            <div class="edit-item edit-item-location">
-                <header class="edit-item-header">
-                    <h3>地点</h3>
-                </header>
-                <div class="edit-item-content">
-                    <input type="text" class="address" name="address" id="address" value="" placeholder="活动地点">
-                </div>
-            </div>
-
-            <div class="edit-item edit-item-photo">
-                <header class="edit-item-header">
-                    <h3>图片</h3>
-                </header>
-            </div>
-
-            <div class="upload" id="upload_img">
-                <div class="upload-item">
-                    <input type="file" name="headpic[]" class="headpicinput_1" id="headpicinput_1" style="display: none;" onchange="UpLoad(this)">
-                    <input type="hidden" id="imgUrl_1" class="imgUrl" name="pics[]" value="">
-                    <div id="" class="cell cell_1">
-                        <a href="javascript:void(0);"><img src="http://i1.dd-img.com/assets/image/1495764543-95352fde674ead19-200w-200h.png" id="preViewImg_1" class="preViewImg"></a>
-                        
-                    </div>
-                </div>
-                <div class="upload-item">
-                    <input type="file" name="headpic[]" class="headpicinput_1" id="headpicinput_1" style="display: none;" onchange="UpLoad(this)">
-                    <input type="hidden" id="imgUrl_1" class="imgUrl" name="pics[]" value="">
-                    <div id="" class="cell cell_1">
-                        <a href="javascript:void(0);"><img src="http://i1.dd-img.com/assets/image/1495764543-95352fde674ead19-200w-200h.png" id="preViewImg_1" class="preViewImg"></a>
-                        
-                    </div>
-                </div>
-                <div class="upload-item">
-                    <input type="file" name="headpic[]" class="headpicinput_1" id="headpicinput_1" style="display: none;" onchange="UpLoad(this)">
-                    <input type="hidden" id="imgUrl_1" class="imgUrl" name="pics[]" value="">
-                    <div id="" class="cell cell_1">
-                        <a href="javascript:void(0);"><img src="http://i1.dd-img.com/assets/image/1495764543-95352fde674ead19-200w-200h.png" id="preViewImg_1" class="preViewImg"></a>
-                        
-                    </div>
-                </div>
-                <div class="upload-item">
-                    <input type="file" name="headpic[]" class="headpicinput_1" id="headpicinput_1" style="display: none;" onchange="UpLoad(this)">
-                    <input type="hidden" id="imgUrl_1" class="imgUrl" name="pics[]" value="">
-                    <div id="" class="cell cell_1">
-                        <a href="javascript:void(0);"><img src="http://i1.dd-img.com/assets/image/1495764543-95352fde674ead19-200w-200h.png" id="preViewImg_1" class="preViewImg"></a>
-                        
-                    </div>
-                </div>
-                <div class="upload-item">
-                    <input type="file" name="headpic[]" class="headpicinput_1" id="headpicinput_1" style="display: none;" onchange="UpLoad(this)">
-                    <input type="hidden" id="imgUrl_1" class="imgUrl" name="pics[]" value="">
-                    <div id="" class="cell cell_1">
-                        <a href="javascript:void(0);"><img src="http://i1.dd-img.com/assets/image/1495764543-95352fde674ead19-200w-200h.png" id="preViewImg_1" class="preViewImg"></a>
-                        
-                    </div>
-                </div>
-                <div class="upload-item">
-                    <input type="file" name="headpic[]" class="headpicinput_1" id="headpicinput_1" style="display: none;" onchange="UpLoad(this)">
-                    <input type="hidden" id="imgUrl_1" class="imgUrl" name="pics[]" value="">
-                    <div id="" class="cell cell_1">
-                        <a href="javascript:void(0);"><img src="http://i1.dd-img.com/assets/image/1495764543-95352fde674ead19-200w-200h.png" id="preViewImg_1" class="preViewImg"></a>
-                        
-                    </div>
-                </div>
-                <div class="upload-item">
-                    <input type="file" name="headpic[]" class="headpicinput_1" id="headpicinput_1" style="display: none;" onchange="UpLoad(this)">
-                    <input type="hidden" id="imgUrl_1" class="imgUrl" name="pics[]" value="">
-                    <div id="" class="cell cell_1">
-                        <a href="javascript:void(0);"><img src="http://i1.dd-img.com/assets/image/1495764543-95352fde674ead19-200w-200h.png" id="preViewImg_1" class="preViewImg"></a>
-                        
-                    </div>
-                </div>
-                <div class="upload-item">
-                    <input type="file" name="headpic[]" class="headpicinput_1" id="headpicinput_1" style="display: none;" onchange="UpLoad(this)">
-                    <input type="hidden" id="imgUrl_1" class="imgUrl" name="pics[]" value="">
-                    <div id="" class="cell cell_1">
-                        <a href="javascript:void(0);"><img src="http://i1.dd-img.com/assets/image/1495764543-95352fde674ead19-200w-200h.png" id="preViewImg_1" class="preViewImg"></a>
-                        
-                    </div>
-                </div>
-                <div class="upload-item">
-                    <input type="file" name="headpic[]" class="headpicinput_1" id="headpicinput_1" style="display: none;" onchange="UpLoad(this)">
-                    <input type="hidden" id="imgUrl_1" class="imgUrl" name="pics[]" value="">
-                    <div id="" class="cell cell_1">
-                        <a href="javascript:void(0);"><img src="http://i1.dd-img.com/assets/image/1495764543-95352fde674ead19-200w-200h.png" id="preViewImg_1" class="preViewImg"></a>
-                        
-                    </div>
-                </div>
-            </div>
-
-            <div class="edit-item edit-item-top">
-                <div class="edit-item-content">
-                    <label for="ontop"><input type="checkbox" name="isTop" id="isTop" value="1" > 置顶</label>
-                    <label for="ontop" style="margin-left:2rem;">发布时间 : <input type="text" name="createTime" id="createTime" onclick="laydate({istime: true, format: 'YYYY-MM-DD hh:mm'})" value=""/ ></label>
-                </div>
-            </div>
-
-            <div class="edit-item edit-item-submit">
-                <input type="submit" value="提交">
-            </div>
-
-        </form>
-    </div>
-    <canvas id="canvas" style="display:none;"></canvas>
-    <!-- <script src="../build/edit.debug.js"></script> -->
-    <script src="http://assets.diandong.com/mobile/live/build/edit.debug.js"></script>
 <script type="text/javascript">
-/*var liveId = '22';
-function ckform() {
-    var summary = document.getElementById('summary').value;
-    if (summary=='' || summary.length<2) {
-        alert('请输入推文内容, 不少于2个字');
-        return false;
-    }
-
-    return true;
-}
-
-function loadUpload() {
-    var ispic = $('input[name="isPic"]:checked').val();
-    
-}
-
-function addPic() {
-    if ($('input[name="pics[]"]').length<9) {
-        var html = '';
-        html += '<div class="upload-item">';
-        html += '            <input type="file" name="headpic[]" class="headpicinput_1" id="headpicinput_1" style="display: none;" onchange="UpLoad(this)">';
-        html += '            <input type="hidden" id="imgUrl_1" class="imgUrl" name="pics[]" value="">';
-        html += '            <div id="" class="cell cell_1">';
-        html += '                <a href="javascript:void(0);"><img src="http://i1.dd-img.com/assets/image/1495764543-95352fde674ead19-200w-200h.png" id="preViewImg_1" class="preViewImg"></a>';
-        html += '                ';
-        html += '            </div>';
-        html += '        </div>';
-        $('#image_div').append('<input type="text" name="pics[]" id="pics[]" value="" style="width:100%" />');
-    } else {
-        alert('最多可以上传9张图片');
-    }
-}*/
 
 $(function(){
-  /*  $('input[name="isPic"]').bind('click', loadUpload);
-    $('#addBtn').bind('click', addPic);*/
+
     //监听上传
     $('.upload-item a').bind('click', function(){
         $(this).parent().parent().find('input[name="headpic[]"]').click();
     })
 });
 
-
-
-
-
  function UpLoad(e) {
-    var f = e.files[0];
-
+   var  f = e.files[0];
+console.log(f);
     fileType = f.type;
-    console.log(f);
+    console.log(fileType);
     var parent = $(e).parents('.upload-item');
 
     var imgUrlInput = parent.find('.imgUrl');
