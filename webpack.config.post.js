@@ -4,7 +4,7 @@ var path = require('path');
 module.exports = {
 
     entry: {
-        post_dynamic: path.resolve(__dirname, 'source/app')
+        post_text: path.resolve(__dirname, 'source/app')
     },
 
     output: {

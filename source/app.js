@@ -7,5 +7,5 @@ var header = new Header();
 /*require('./css/post/post_text.css');*/
 
 // 自有逻辑
-var PostDynamic = require('./js/post/PostDynamic.js');
-var postDynamic = new PostDynamic();
+var Box = require('./js/post/PostText.js');
+var box = new Box();

@@ -1,6 +1,7 @@
 define(function(require, exports, module) {
 
 	var $ = require('jquery');
+	    var QqFace = require('qqFace');
 
 	var PostDynamic = function() {
 		this.init();

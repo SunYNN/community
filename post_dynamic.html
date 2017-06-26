@@ -14,11 +14,14 @@
 
     <body>
         <div class="main-wrap">
+        <div id="show">
+<img src="source/images/arclist/18.gif" border="0" />
+        </div>
             <header>
                 <div class="close">
                     <a href=""><i class="icon">&#xe601;</i></a>
                 </div>
-                <div class="choose">
+                <div class="choose"> 
                     <ul>
                         <li class="add_color">
                             <a href="">动态</a>
@@ -32,12 +35,12 @@
                     </ul>
                 </div>
                 <div class="issue">
-                    <button><a href="">发布</a></button>
+                    <button class="sub_btn"><a href="">发布</a></button>
                 </div>
             </header>
             <section>
                 <div class="write">
-                    <textarea placeholder="写下你此刻的想法......"></textarea>
+                    <textarea id="saytext" placeholder="写下你此刻的想法......"></textarea>
                 </div>
                 <div class="classify-box">
                     <div class="classify">
@@ -53,7 +56,7 @@
                 <div class="addition-box">
                     <div class="addition">
                         <i class="iconfont">&#xe699;</i>
-                        <i class="iconfont">&#xe60b;</i>
+                        <i class="iconfont emotion">&#xe60b;</i>
                         <i class="iconfont">&#xe600;</i>
                     </div>
                 </div>
@@ -160,5 +163,53 @@
         
     </body>
     <script src="build/post/post_dynamic.debug.js"></script>
+<script src="source/js/jquery.min.js"></script>
+<script src="source/js/jquery.qqFace.js"></script>
+    <script type="text/javascript">
+
+$(function(){
+
+    $('.emotion').qqFace({
+
+        id : 'facebox', 
+
+        assign:'saytext', 
+
+        path:'source/images/arclist/' //表情存放的路径
+
+    });
+
+    $(".sub_btn").click(function(){
+
+        var str = $("#saytext").val();
+
+        $("#show").html(replace_em(str));
+
+    });
+
+});
+
+//查看结果
+
+function replace_em(str){
+
+    str = str.replace(/\</g,'&lt;');
+
+    str = str.replace(/\>/g,'&gt;');
+
+    str = str.replace(/\n/g,'<br/>');
+
+
+    str = str.replace(/\[em_([0-9]*)\]/g,'<img src="source/images/arclist/$1.gif" border="0" />');
+    console.log(str);
+
+
+    return str;
+    alert(str)
+
+}
+
+</script>
+
 
 </html>
