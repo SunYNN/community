@@ -1,258 +1,164 @@
-<html lang="en">
+<!DOCTYPE html>
+<html>
 
-<head>
-    <meta charset="UTF-8">
-    <title>Document</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no, minimal-ui">
-    <script src="http://assets.diandong.com/mobile/live/build/flexible.js"></script>
+    <head>
+        <meta charset="UTF-8">
+        <title></title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="ie=edge">
+        <link rel="stylesheet" href="source/css/base_v3.min.css" />
+       
+        <script src="source/js/flexible/rem.min.js"></script>
+      <link rel="stylesheet" href="source/css/post/post_dynamic.css" />
+    </head>
 
-    <script type="text/javascript" src="http://assets.diandong.com/mobile/js/jquery.min.js"></script>
-   <!--  <script type="text/javascript" src="/static/js/laydate/laydate.js"></script>  -->
-    <script type="text/javascript" src="source/js/post/exif.js"></script>
-</head>
+    <body>
+        <div class="main-wrap">
+            <header>
+                <div class="close">
+                    <a href=""><i class="icon">&#xe601;</i></a>
+                </div>
+                <div class="choose">
+                    <ul>
+                        <li class="add_color">
+                            <a href="">动态</a>
+                        </li>
+                        <li>
+                            <a href="">问答</a>
+                        </li>
+                        <li>
+                            <a href="">长文</a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="issue">
+                    <button><a href="">发布</a></button>
+                </div>
+            </header>
+            <section>
+                <div class="write">
+                    <textarea placeholder="写下你此刻的想法......"></textarea>
+                </div>
+                <div class="classify-box">
+                    <div class="classify">
+                        <p>分类（必填）</p>
+                        <div class="classify-choose">
+                            <span>请先选择一个分类</span>
+                            <i class="icon">&#xe603;</i>
+                        </div>
+                        
+                    </div>
 
-<body>
-    <div class="upload" id="upload_img">
-        <div class="upload-item">
-            <input type="file" name="headpic[]" class="headpicinput_1" id="headpicinput_1" style="display: none;" onchange="UpLoad(this)">
-            <input type="hidden" id="imgUrl_1" class="imgUrl" name="pics[]" value="">
-            <div id="" class="cell cell_1">
-                <a href="javascript:void(0);">
-                <img src="http://i1.dd-img.com/assets/image/1495764543-95352fde674ead19-200w-200h.png" id="preViewImg_1" class="preViewImg">
-                </a>
+                </div>
+                <div class="addition-box">
+                    <div class="addition">
+                        <i class="iconfont">&#xe699;</i>
+                        <i class="iconfont">&#xe60b;</i>
+                        <i class="iconfont">&#xe600;</i>
+                    </div>
+                </div>
+            </section>
             </div>
-        </div>
-    </div>
-      
-
-<script type="text/javascript">
-
-$(function(){
-
-    //监听上传
-    $('.upload-item a').bind('click', function(){
-        $(this).parent().parent().find('input[name="headpic[]"]').click();
-    })
-});
-
- function UpLoad(e) {
-   var  f = e.files[0];
-console.log(f);
-    fileType = f.type;
-    console.log(fileType);
-    var parent = $(e).parents('.upload-item');
-
-    var imgUrlInput = parent.find('.imgUrl');
-    var preViewImg = parent.find('.preViewImg');
-    var imgUrl = parent.find('.imgUrl');
-    var Orientation = '';
-
-    if (/image\/\w+/.test(fileType)) {
-        var fileReader = new FileReader();
-        EXIF.getData(f, function() {  
-           // alert(EXIF.pretty(this));  
-            EXIF.getAllTags(this);   
-            //alert(EXIF.getTag(this, 'Orientation'));   
-            Orientation = EXIF.getTag(this, 'Orientation');  
-        });  
-
-        fileReader.readAsDataURL(f);
-
-        fileReader.onload = function(event) {
-            var result = event.target.result; //返回的dataURL
-            // var image = new Image();
-
-            // image.src = result;
-            //若图片大小大于1M，压缩后再上传，否则直接上传
-
-            var maxW = 1200;
-            var maxH = 1000;
-            var rat = maxW/maxH;
-
-            var image = new Image();  
-            image.src = result;//;e.target.result;  
-            image.onload = function() {  
-                var expectWidth = this.naturalWidth;  
-                var expectHeight = this.naturalHeight;  
-                  
-                if (this.naturalWidth > this.naturalHeight && this.naturalWidth > maxW) {  
-                    expectWidth = maxW;  
-                    expectHeight = expectWidth * this.naturalHeight / this.naturalWidth;  
-                } else if (this.naturalHeight > this.naturalWidth && this.naturalHeight > maxH) {  
-                    expectHeight = maxH;  
-                    expectWidth = expectHeight * this.naturalWidth / this.naturalHeight;  
-                }  
-                var canvas = document.createElement("canvas");  
-                var ctx = canvas.getContext("2d");  
-                canvas.width = expectWidth;  
-                canvas.height = expectHeight;  
-                //console.log(canvas.width+':'+canvas.height);
-                ctx.drawImage(this, 0, 0, expectWidth, expectHeight);  
-                var base64 = null;  
-                //修复ios  
-                if (navigator.userAgent.match(/iphone/i)) {  
-                    //console.log('iphone');  
-                    //alert(expectWidth + ',' + expectHeight);  
-                    //如果方向角不为1，都需要进行旋转 added by lzk  
-                    if(Orientation != "" && Orientation != 1){  
-                        //alert('旋转处理');  
-                        switch(Orientation){  
-                            case 6://需要顺时针（向左）90度旋转  
-                                //alert('需要顺时针（向左）90度旋转');  
-                                rotateImg(this,'left',canvas);  
-                                break;  
-                            case 8://需要逆时针（向右）90度旋转  
-                                //alert('需要顺时针（向右）90度旋转');  
-                                rotateImg(this,'right',canvas);  
-                                break;  
-                            case 3://需要180度旋转  
-                                //alert('需要180度旋转');  
-                                rotateImg(this,'right',canvas);//转两次  
-                                rotateImg(this,'right',canvas);  
-                                break;  
-                        }         
-                    }  
-                    base64 = canvas.toDataURL(fileType, 0.8);  
-                }else if (navigator.userAgent.match(/Android/i)) {// 修复android  
-                    var canvas = document.getElementById("canvas");
-                    canvas.width = this.width;
-                    canvas.height = this.height; //计算等比缩小后图片宽高
-                    var ctx = canvas.getContext('2d');
-                    var expectHeight = this.naturalHeight; 
-                    console.log(canvas.width+'/'+canvas.height);
-                    //等比压缩
-                    if (canvas.width/canvas.height>rat) {
-                        if (canvas.width>maxW) {
-                            canvas.width = maxW;
-                            canvas.height = parseInt((canvas.height*maxW)/this.width);
-                        }
-                    } else {
-                        if (canvas.height>maxH) {
-                                canvas.height = maxH;
-                                canvas.width = parseInt((canvas.width*maxH)/this.height);
-                            } else {
-                                
-                            }
-                    }
-                    console.log(canvas.width+'=>'+canvas.height);
-                    ctx.drawImage(this, 0, 0, canvas.width, canvas.height);
-                    base64 = canvas.toDataURL(fileType, 0.8); //重新生成图片
-                    // var encoder = new JPEGEncoder();  
-                    // base64 = encoder.encode(ctx.getImageData(0, 0, expectWidth, expectHeight), 80);  
-                }else{  
-                    //alert(Orientation);  
-                    if(Orientation != "" && Orientation != 1){  
-                        //alert('旋转处理');  
-                        switch(Orientation){  
-                            case 6://需要顺时针（向左）90度旋转  
-                                //alert('需要顺时针（向左）90度旋转');  
-                                rotateImg(this,'left',canvas);  
-                                break;  
-                            case 8://需要逆时针（向右）90度旋转  
-                                //alert('需要顺时针（向右）90度旋转');  
-                                rotateImg(this,'right',canvas);  
-                                break;  
-                            case 3://需要180度旋转  
-                                //alert('需要180度旋转');  
-                                rotateImg(this,'right',canvas);//转两次  
-                                rotateImg(this,'right',canvas);  
-                                break;  
-                        }         
-                    }  
-                      
-                    base64 = canvas.toDataURL(fileType, 0.8);  
-
-                }  
-                var postData = base64.replace("data:" + fileType + ";base64,", '');
-                // 图片赋值
-                preViewImg.attr("src", base64);  
-
-                $.post('/live/ajax/', {opt:'upload', base64Img:postData, fileType:fileType, rnd:Math.random()}, function(result){
-                    if (result.match("^\{(.+:.+,*){1,}\}$")) {
-                        result = $.parseJSON(result);
-                        if (result.code == 200) {
-                            imgUrlInput.val(result.data);
-                            //preViewImg.attr('src', result.data);
-                        } else {
-                            alert(result.msg);
-                        }
-                    } else {
-                        alert('上传出错, 返回格式不正确');
-                    }
-                });
-            };  
-
-        }
-    } else {
-        alert("请选择图片");
-    }
-}
-
-
-
-
-//对图片旋转处理 added by lzk  
-function rotateImg(img, direction,canvas) {    
-        //alert(img);  
-        //最小与最大旋转方向，图片旋转4次后回到原方向    
-        var min_step = 0;    
-        var max_step = 3;    
-        //var img = document.getElementById(pid);    
-        if (img == null)return;    
-        //img的高度和宽度不能在img元素隐藏后获取，否则会出错    
-        var height = img.height;    
-        var width = img.width;    
-        //var step = img.getAttribute('step');    
-        var step = 2;    
-        if (step == null) {    
-            step = min_step;    
-        }    
-        if (direction == 'right') {    
-            step++;    
-            //旋转到原位置，即超过最大值    
-            step > max_step && (step = min_step);    
-        } else {    
-            step--;    
-            step < min_step && (step = max_step);    
-        }    
-        //img.setAttribute('step', step);    
-        /*var canvas = document.getElementById('pic_' + pid);   
-        if (canvas == null) {   
-            img.style.display = 'none';   
-            canvas = document.createElement('canvas');   
-            canvas.setAttribute('id', 'pic_' + pid);   
-            img.parentNode.appendChild(canvas);   
-        }  */  
-        //旋转角度以弧度值为参数    
-        var degree = step * 90 * Math.PI / 180;    
-        var ctx = canvas.getContext('2d');    
-        switch (step) {    
-            case 0:    
-                canvas.width = width;    
-                canvas.height = height;    
-                ctx.drawImage(img, 0, 0);    
-                break;    
-            case 1:    
-                canvas.width = height;    
-                canvas.height = width;    
-                ctx.rotate(degree);    
-                ctx.drawImage(img, 0, -height);    
-                break;    
-            case 2:    
-                canvas.width = width;    
-                canvas.height = height;    
-                ctx.rotate(degree);    
-                ctx.drawImage(img, -width, -height);    
-                break;    
-            case 3:    
-                canvas.width = height;    
-                canvas.height = width;    
-                ctx.rotate(degree);    
-                ctx.drawImage(img, -width, 0);    
-                break;    
-        }    
-    }    
-</script>
-</body>
+            <div class="choose-classify hide">
+                <header>
+                    <div class="back">
+                        <a href=""><i class="icon">&#xe602;</i></a>
+                    </div>
+                    <h5>请选择分类</h5>
+                    <div class="confirm">
+                        <button><a href="">确定</a></button>
+                    </div>
+                </header>
+                <section>
+                    <div class="list">
+                        <div class="list-name">
+                            <p>北汽</p>
+                            <i class="icon">&#xe606;</i>
+                        </div>
+                        <div class="list-num fn-hide">
+                            <ul>
+                                <li><a href="" class="car_color">北汽</a></li>
+                                <li><a href="">EV300</a></li>
+                                <li><a href="">EU260</a></li>
+                                <li><a href="">EX200</a></li>
+                                <li><a href="">EC180</a></li>
+                                <li><a href="">EV210</a></li>
+                                <li><a href="">EU400</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="list">
+                        <div class="list-name">
+                            <p>北汽</p>
+                            <i class="icon">&#xe606;</i>
+                        </div>
+                        <div class="list-num fn-hide">
+                            <ul>
+                                <li><a href="">北汽</a></li>
+                                <li><a href="">EV300</a></li>
+                                <li><a href="">EU260</a></li>
+                                <li><a href="">EX200</a></li>
+                                <li><a href="">EC180</a></li>
+                                <li><a href="">EV210</a></li>
+                                <li><a href="">EU400</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="list">
+                        <div class="list-name">
+                            <p>北汽</p>
+                            <i class="icon">&#xe606;</i>
+                        </div>
+                        <div class="list-num fn-hide">
+                            <ul>
+                                <li><a href="">北汽</a></li>
+                                <li><a href="">EV300</a></li>
+                                <li><a href="">EU260</a></li>
+                                <li><a href="">EX200</a></li>
+                                <li><a href="">EC180</a></li>
+                                <li><a href="">EV210</a></li>
+                                <li><a href="">EU400</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="list">
+                        <div class="list-name">
+                            <p>北汽</p>
+                            <i class="icon">&#xe606;</i>
+                        </div>
+                        <div class="list-num fn-hide">
+                            <ul>
+                                <li><a href="">北汽</a></li>
+                                <li><a href="">EV300</a></li>
+                                <li><a href="">EU260</a></li>
+                                <li><a href="">EX200</a></li>
+                                <li><a href="">EC180</a></li>
+                                <li><a href="">EV210</a></li>
+                                <li><a href="">EU400</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="list">
+                        <div class="list-name">
+                            <p>北汽</p>
+                            <i class="icon">&#xe606;</i>
+                        </div>
+                        <div class="list-num fn-hide">
+                            <ul>
+                                <li><a href="">北汽</a></li>
+                                <li><a href="">EV300</a></li>
+                                <li><a href="">EU260</a></li>
+                                <li><a href="">EX200</a></li>
+                                <li><a href="">EC180</a></li>
+                                <li><a href="">EV210</a></li>
+                                <li><a href="">EU400</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        
+    </body>
+    <script src="build/post/post_dynamic.debug.js"></script>
 
 </html>

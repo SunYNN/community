@@ -19,20 +19,18 @@ define(function(require, exports, module) {
                 h += 1; //第单击一次i的值加1
                 $(this).attr("addval", h);
                 that.addcovertext();
-             
+
 
 
                 that.sort();
             });
             $('.addcover-picture').on('click', function() {
-
-                //alert("111");
                 h += 1; //第单击一次i的值加1
                 $(this).attr("addval", h)
-               $(".headpicinput_1").change(function(e) {
-                        that.UpLoad();
-                    });
-                     that.sort();
+                $(".headpicinput_1").change(function(e) {
+                    that.UpLoad();
+                });
+                that.sort();
             });
 
 
@@ -66,29 +64,38 @@ define(function(require, exports, module) {
                 that.sort();
             });
             $('form').on('click', '.addto-text-closeicon', function() {
-                if (confirm('是否删除此版块?')) {
-                    $(this).parents('.addto-text').remove();
-                    console.log('删除.');
+                var aa = $(this).parents('.addto-text');
+                if (aa.length > 0) {
+                    if (confirm('是否删除此版块?')) {
+                        $(this).parents('.addto-text').remove();
+                        console.log('删除.');
+                    }
+
+                } else {
+                    if (confirm('是否删除此版块?')) {
+                        $(this).parents('.addto-picture').remove();
+                        console.log('删除.');
+                    }
                 }
 
 
             });
             $('form').on('click', '.addto-picturebox-setcover', function() {
-                var count=$('.addto-picturebox-intocover').length;
-                if (count>0) {
-confirm('已经有封面')
-                console.log("yijingyou")
-                }else{
+                var count = $('.addto-picturebox-intocover').length;
+                if (count > 0) {
+                    confirm('已经设置封面')
+                    console.log("yijingyou")
+                } else {
                     console.log("meiyyou")
-                 var coverhtml='';
-                $(this).after('<div class="addto-picturebox-intocover"><i class="icon addto-picturebox-intocover-checkicon">&#xe600;</i>封面</div>');
-                $(this).remove();
+                    var coverhtml = '';
+                    $(this).after('<div class="addto-picturebox-intocover"><i class="icon addto-picturebox-intocover-checkicon">&#xe600;</i>封面</div>');
+                    $(this).remove();
                 }
-               
+
 
             });
             $('form').on('click', '.addto-picturebox-intocover', function() {
-                var coverhtml='';
+                var coverhtml = '';
                 $(this).after('<div class="addto-picturebox-setcover">设为封面</div>');
                 $(this).remove();
 
@@ -116,10 +123,11 @@ confirm('已经有封面')
 
         },
         addcoverpicture: function() {
+            console.log("111")
             var that = this;
             var picturehtml = "";
-            var base64=$('.base').attr('data-base');
-            var imgUrlInput=$('.imgUrl').val();
+            var base64 = $('.base').attr('data-base');
+            var imgUrlInput = $('.imgUrl').val();
             var dataId = $('.addcover-picture').attr('addval');
             picturehtml += '<div class="addto-picture"  data-id="' + dataId + '">' +
                 '<div class="addto-text-h2">' +
@@ -129,8 +137,8 @@ confirm('已经有封面')
                 '<i class="addto-text-closeicon icon fr">&#xe601;</i>' +
                 '</div>' +
                 '<div class="addto-picturebox">' +
-                '<input type="hidden" id="imgUrl_1" class="imgUrl" name="pics[]" value="'+imgUrlInput+'">' +
-                '<img src="'+base64+'" alt="">' +
+                '<input type="hidden" id="imgUrl_1" class="imgUrl" name="pics[]" value="' + imgUrlInput + '">' +
+                '<img src="' + base64 + '" alt="">' +
                 '<div class="addto-picturebox-text">' +
                 '<input type="text" placeholder="添加注释" value="添加注释">' +
                 '</div>' +
@@ -155,10 +163,10 @@ confirm('已经有封面')
         },
         UpLoad: function(e) {
             var that = this;
-            var f=document.querySelector("#headpicinput_1").files[0];
+            var f = document.querySelector("#headpicinput_1").files[0];
             fileType = f.type;
-            var baseBox=$('.base');
-            var imgUrlInput =$('.imgUrl');
+            var baseBox = $('.base');
+            var imgUrlInput = $('.imgUrl');
             var Orientation = '';
             if (/image\/\w+/.test(fileType)) {
                 var fileReader = new FileReader();
