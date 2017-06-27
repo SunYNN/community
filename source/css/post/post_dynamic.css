@@ -236,3 +236,58 @@
 .hide {
   display: none;
 }
+
+/* 表情 */
+.facebox{
+display: none;
+}
+.faceboxshow{
+  display: block;
+}
+.emotionblue{
+  color: #52a2e7;
+}
+.facebox,.facebox-container{
+   height: 6.075rem;
+  background: #f2f2f2;
+
+  position: relative;
+}
+.facebox-container{
+    overflow: hidden;
+}
+.facebox-wrapper{
+  position: relative;
+}
+.facebox-slider{
+    float: left;
+    width: 16rem;
+    height: 6.075rem;
+    background-size: 100% 100%;
+    background-repeat：no-repeat;
+}
+.facebox-pages{
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    height: .6rem;
+
+    text-align: center;
+}
+.facebox-pages span {
+    display: inline-block;
+    width: .25rem;
+    height: .075rem;
+    background-color: #fff;
+    margin: 0 .25rem;
+}
+.facebox-pages span.swiper-active-switch {
+    background-color: #ff7400;
+}
+.facebox-container li{
+  float: left;
+  width: 1.125rem;
+  height: 1.125rem;
+  margin: .175rem .575rem;
+}

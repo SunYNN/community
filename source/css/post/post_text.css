@@ -175,6 +175,7 @@
     cursor: pointer;
     z-index: 5;
 }
+
 .addcover-picture-icon,.addcover-text-icon{
   width: 1rem;
   display: inline-block;
@@ -231,6 +232,7 @@
     font-size: .6rem;
     position: absolute;
     top: .675rem;
+    z-index: 10;
 
 }
 .addto-picturebox-setcover{

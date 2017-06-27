@@ -1,11 +1,8 @@
 define(function(require, exports, module) {
-
     var $ = require('jquery');
-
     var Box = function() {
         this.init();
     };
-
     Box.prototype = {
 
         init: function() {
@@ -14,23 +11,25 @@ define(function(require, exports, module) {
 
         bindEvent: function() {
             var that = this;
-            var h = 0; //设置一个全局的变量
+            var h = 0; //设置一个变量
+            //window.h = 0;
             $('.addcover-text').on('click', function() {
                 h += 1; //第单击一次i的值加1
                 $(this).attr("addval", h);
                 that.addcovertext();
-
-
-
                 that.sort();
             });
             $('.addcover-picture').on('click', function() {
+                //console.log(h);
                 h += 1; //第单击一次i的值加1
-                $(this).attr("addval", h)
-                $(".headpicinput_1").change(function(e) {
+                $(this).attr("addval", h);
+                $(".file-input-one").off();
+                $(".file-input-one").change(function(e) {
                     that.UpLoad();
                 });
+                //console.log(h);
                 that.sort();
+                //console.log(h);
             });
 
 
@@ -43,9 +42,7 @@ define(function(require, exports, module) {
                     var k = $(this).parents('.addto-picture').attr('data-id');
                     $(this).parents('.addto-picture').attr('data-id', k - 1);
                 }
-
                 that.sort();
-
             });
             $('form').on('click', '.addto-text-downicon', function() {
                 var aa = $(this).parents('.addto-text');
@@ -58,9 +55,6 @@ define(function(require, exports, module) {
                     var k = $(this).parents('.addto-picture').attr('data-id');
                     $(this).parents('.addto-picture').attr('data-id', Number(k) + 1);
                 }
-
-
-
                 that.sort();
             });
             $('form').on('click', '.addto-text-closeicon', function() {
@@ -70,15 +64,12 @@ define(function(require, exports, module) {
                         $(this).parents('.addto-text').remove();
                         console.log('删除.');
                     }
-
                 } else {
                     if (confirm('是否删除此版块?')) {
                         $(this).parents('.addto-picture').remove();
                         console.log('删除.');
                     }
                 }
-
-
             });
             $('form').on('click', '.addto-picturebox-setcover', function() {
                 var count = $('.addto-picturebox-intocover').length;
@@ -91,8 +82,6 @@ define(function(require, exports, module) {
                     $(this).after('<div class="addto-picturebox-intocover"><i class="icon addto-picturebox-intocover-checkicon">&#xe600;</i>封面</div>');
                     $(this).remove();
                 }
-
-
             });
             $('form').on('click', '.addto-picturebox-intocover', function() {
                 var coverhtml = '';
@@ -100,8 +89,6 @@ define(function(require, exports, module) {
                 $(this).remove();
 
             });
-
-
         },
         addcovertext: function() {
             var that = this;
@@ -119,11 +106,9 @@ define(function(require, exports, module) {
                 '</div>' +
                 '</div>';
             $('.addcover-bottom').after(texthtml);
-
-
         },
         addcoverpicture: function() {
-            console.log("111")
+            //console.log("111")
             var that = this;
             var picturehtml = "";
             var base64 = $('.base').attr('data-base');
@@ -146,6 +131,7 @@ define(function(require, exports, module) {
                 '</div>' +
                 '</div>';
             $('.addcover-bottom').after(picturehtml);
+            that.sort();
         },
         sort: function() {
             var aDiv = document.querySelectorAll(".addto-text,.addto-picture");
@@ -156,14 +142,17 @@ define(function(require, exports, module) {
             arr.sort(function(a, b) {
                 return b.getAttribute('data-id') - a.getAttribute('data-id')
             });
+
+            //console.log(arr);
             for (var i = 0; i < arr.length; i++) {
                 $('.addcover-bottom').after(arr[i]); //将排好序的元素重新排列
             }
 
         },
         UpLoad: function(e) {
+            //console.log('1122333444');
             var that = this;
-            var f = document.querySelector("#headpicinput_1").files[0];
+            var f = document.querySelector("#file-input-one").files[0];
             fileType = f.type;
             var baseBox = $('.base');
             var imgUrlInput = $('.imgUrl');
@@ -176,26 +165,20 @@ define(function(require, exports, module) {
                     //alert(EXIF.getTag(this, 'Orientation'));   
                     Orientation = EXIF.getTag(this, 'Orientation');
                 });
-
                 fileReader.readAsDataURL(f);
-
                 fileReader.onload = function(event) {
                     var result = event.target.result; //返回的dataURL
                     // var image = new Image();
-
                     // image.src = result;
                     //若图片大小大于1M，压缩后再上传，否则直接上传
-
                     var maxW = 1200;
                     var maxH = 1000;
                     var rat = maxW / maxH;
-
                     var image = new Image();
                     image.src = result; //;e.target.result;  
                     image.onload = function() {
                         var expectWidth = this.naturalWidth;
                         var expectHeight = this.naturalHeight;
-
                         if (this.naturalWidth > this.naturalHeight && this.naturalWidth > maxW) {
                             expectWidth = maxW;
                             expectHeight = expectWidth * this.naturalHeight / this.naturalWidth;
@@ -252,7 +235,6 @@ define(function(require, exports, module) {
                                     canvas.height = maxH;
                                     canvas.width = parseInt((canvas.width * maxH) / this.height);
                                 } else {
-
                                 }
                             }
                             console.log(canvas.width + '=>' + canvas.height);
@@ -280,18 +262,12 @@ define(function(require, exports, module) {
                                         break;
                                 }
                             }
-
                             base64 = canvas.toDataURL(fileType, 0.8);
-
                         }
                         var postData = base64.replace("data:" + fileType + ";base64,", '');
                         // 图片赋值
                         baseBox.attr("data-base", base64);
-
-
                         that.addcoverpicture();
-
-
                         $.post('/live/ajax/', {
                             opt: 'upload',
                             base64Img: postData,
@@ -303,6 +279,7 @@ define(function(require, exports, module) {
                                 if (result.code == 200) {
                                     imgUrlInput.val(result.data);
                                     //preViewImg.attr('src', result.data);
+                                     that.sort();
                                 } else {
                                     alert(result.msg);
                                 }
@@ -315,9 +292,8 @@ define(function(require, exports, module) {
                 }
             } else {
                 alert("请选择图片");
-            }
+            };
         },
-
         //对图片旋转处理 added by lzk  
         rotateImg: function(img, direction, canvas) {
             //alert(img);  

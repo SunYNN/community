@@ -13,11 +13,14 @@ module.exports = {
     },
 
     module: {
-        rules: [
-            {
-                test: /\.css$/,
-                use: ['style-loader', 'css-loader']
-            }
-        ]
-    }
+        rules: [{
+            test: /\.css$/,
+            use: ['style-loader', 'css-loader']
+        }]
+    },
+   /* resolve: {
+        alias: {
+            swiper: path.resolve(__dirname, 'source/lib/swiper/idangerous.swiper.min'),
+        }
+    },*/
 };
