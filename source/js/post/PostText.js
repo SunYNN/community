@@ -11,6 +11,41 @@ define(function(require, exports, module) {
 
         bindEvent: function() {
             var that = this;
+            $('.addcover-classify-val').on('click', function() {
+
+                $('.choose-classify').addClass('choose-classify-show');
+
+              
+
+            });
+            $('.list-name').click(function() {
+
+                if ($(this).siblings().hasClass('fn-hide')) {
+                    $(this).find('.icon').html('&#xe605;');
+                } else {
+                    $(this).find('.icon').html('&#xe606;');
+                }
+                $(this).next().hasClass('fn-hide') ? $(this).next().removeClass('fn-hide') : $(this).next().addClass('fn-hide');
+            });
+            $('.list-num a').on('click', function() {
+                console.log("111")
+               $(this).addClass('car_color');
+               $(this).parent().siblings().find('a').removeClass('car_color');
+               var carid=$('.car_color').attr('data-carid');
+               console.log(carid);
+               that.carid =carid;
+               var carhtml=$('.car_color').html();
+               console.log(carhtml);
+               that.carhtml=carhtml;
+               htmls='';
+               htmls+='<span data-carid="'+carid+'">'+carhtml+'</span><i class="icon addcover-classify-icon">&#xe603;</i>'
+               $('.addcover-classify-val').html(htmls);
+
+            });
+            
+            $('.confirm').on('click',function(){
+                $('.choose-classify').removeClass('choose-classify-show');
+            })
             var h = 0; //设置一个变量
             //window.h = 0;
             $('.addcover-text').on('click', function() {
@@ -18,6 +53,7 @@ define(function(require, exports, module) {
                 $(this).attr("addval", h);
                 that.addcovertext();
                 that.sort();
+                that.iid
             });
             $('.addcover-picture').on('click', function() {
                 //console.log(h);
@@ -234,8 +270,7 @@ define(function(require, exports, module) {
                                 if (canvas.height > maxH) {
                                     canvas.height = maxH;
                                     canvas.width = parseInt((canvas.width * maxH) / this.height);
-                                } else {
-                                }
+                                } else {}
                             }
                             console.log(canvas.width + '=>' + canvas.height);
                             ctx.drawImage(this, 0, 0, canvas.width, canvas.height);
@@ -279,7 +314,7 @@ define(function(require, exports, module) {
                                 if (result.code == 200) {
                                     imgUrlInput.val(result.data);
                                     //preViewImg.attr('src', result.data);
-                                     that.sort();
+                                    that.sort();
                                 } else {
                                     alert(result.msg);
                                 }
